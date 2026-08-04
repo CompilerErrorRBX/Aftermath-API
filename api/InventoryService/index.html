@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">InventoryService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/InventoryService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="InventoryService | Aftermath"><meta data-rh="true" name="description" content="Inventories, containers and the world, built on HolderService.
+
+HolderService knows how to move quantity between two holders safely.
+This layer knows what holders MEAN: which inventory they belong to, which
+of them own nested inventories, and how weight rolls up through nesting.
+
+Every mutating operation still preserves the conservation invariant --
+nothing here destroys a stack to make the numbers work."><meta data-rh="true" property="og:description" content="Inventories, containers and the world, built on HolderService.
+
+HolderService knows how to move quantity between two holders safely.
+This layer knows what holders MEAN: which inventory they belong to, which
+of them own nested inventories, and how weight rolls up through nesting.
+
+Every mutating operation still preserves the conservation invariant --
+nothing here destroys a stack to make the numbers work."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/InventoryService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/InventoryService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/InventoryService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/HolderService"><span title="​Holder​Service" class="linkLabel_WmDU">​Holder​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/Aftermath-API/api/InventoryService"><span title="​Inventory​Service" class="linkLabel_WmDU">​Inventory​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/InventoryManager"><span title="​Inventory​Manager" class="linkLabel_WmDU">​Inventory​Manager</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/EquipmentService"><span title="​Equipment​Service" class="linkLabel_WmDU">​Equipment​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/SlotPriority"><span title="​Slot​Priority" class="linkLabel_WmDU">​Slot​Priority</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/TransactionService"><span title="​Transaction​Service" class="linkLabel_WmDU">​Transaction​Service</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Inventory</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>Inventories, containers and the world, built on HolderService.</p>
+<p>
+  HolderService knows how to move quantity between two holders safely.
+  This layer knows what holders MEAN: which inventory they belong to, which
+  of them own nested inventories, and how weight rolls up through nesting.
+</p>
+<p>
+  Every mutating operation still preserves the conservation invariant --
+  nothing here destroys a stack to make the numbers work.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Create"><code style="text-decoration:none">Create</code><a href="#Create" class="hash-link" aria-label="Direct link to Create" title="Direct link to Create" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L151"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Create</code><code>(</code><div class="inset_uKQm"><div><code>name<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>kind<!-- -->: </code><code class="blue_P4bS">Types.InventoryKind</code><code>,</code></div><div><code>slot_count<!-- -->: </code><code class="blue_P4bS">number</code><code>,</code></div><div><code>max_weight<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>slot_max_quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">Inventory</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Get"><code style="text-decoration:none">Get</code><a href="#Get" class="hash-link" aria-label="Direct link to Get" title="Direct link to Get" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L179"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Get</code><code>(</code><code>id<!-- -->: </code><code class="blue_P4bS">string</code><code>) → </code><code class="blue_P4bS">Inventory?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetHolder"><code style="text-decoration:none">GetHolder</code><a href="#GetHolder" class="hash-link" aria-label="Direct link to GetHolder" title="Direct link to GetHolder" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L186"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetHolder</code><code>(</code><code>id<!-- -->: </code><code class="blue_P4bS">string</code><code>) → </code><code class="blue_P4bS">ItemHolder?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TrackHolder"><code style="text-decoration:none">TrackHolder</code><a href="#TrackHolder" class="hash-link" aria-label="Direct link to TrackHolder" title="Direct link to TrackHolder" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L195"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">TrackHolder</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">ItemHolder</code></div><div>
+<p>Registers a ground holder so it can take part in nesting/lookup.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetChildInventory"><code style="text-decoration:none">GetChildInventory</code><a href="#GetChildInventory" class="hash-link" aria-label="Direct link to GetChildInventory" title="Direct link to GetChildInventory" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L210"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetChildInventory</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">Inventory?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Contains"><code style="text-decoration:none">Contains</code><a href="#Contains" class="hash-link" aria-label="Direct link to Contains" title="Direct link to Contains" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L241"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Contains</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AttachContainer"><code style="text-decoration:none">AttachContainer</code><a href="#AttachContainer" class="hash-link" aria-label="Direct link to AttachContainer" title="Direct link to AttachContainer" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L253"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">AttachContainer</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Attaches a container's contents to the holder its stack sits in.</p>
+<p>
+  Refuses a cycle: putting a backpack into one of its own slots would make the
+  inventory tree unwalkable and the weight rollup infinite.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DetachContainer"><code style="text-decoration:none">DetachContainer</code><a href="#DetachContainer" class="hash-link" aria-label="Direct link to DetachContainer" title="Direct link to DetachContainer" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L271"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">DetachContainer</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">Inventory?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="HolderWeight"><code style="text-decoration:none">HolderWeight</code><a href="#HolderWeight" class="hash-link" aria-label="Direct link to HolderWeight" title="Direct link to HolderWeight" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L311"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">HolderWeight</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Weight"><code style="text-decoration:none">Weight</code><a href="#Weight" class="hash-link" aria-label="Direct link to Weight" title="Direct link to Weight" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L318"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Weight</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="FindSlotsFor"><code style="text-decoration:none">FindSlotsFor</code><a href="#FindSlotsFor" class="hash-link" aria-label="Direct link to FindSlotsFor" title="Direct link to FindSlotsFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L341"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">FindSlotsFor</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">Types.ItemConfig</code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">SlotPriority.Ranked</code><code class="purple_ieR2">}</code></div><div>
+<p>Slots that will take <code>config</code>, best destination first.</p>
+<p>
+  Exposed so a caller can ask "where would this land" without moving anything --
+  the UI needs that to draw a drop preview, and GetSlotSpaceForItem was the only
+  way to get it before, which computed the answer by walking every slot AND
+  returned five values.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Pickup"><code style="text-decoration:none">Pickup</code><a href="#Pickup" class="hash-link" aria-label="Direct link to Pickup" title="Direct link to Pickup" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L388"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Pickup</code><code>(</code><div class="inset_uKQm"><div><code>ground<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Drop"><code style="text-decoration:none">Drop</code><a href="#Drop" class="hash-link" aria-label="Direct link to Drop" title="Direct link to Drop" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L411"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Drop</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder?</code></div><div>
+<p>Take <code>quantity</code> out of a holder and hand it back as a fresh ground pile.</p>
+<p>
+  Returns nil when nothing could be taken. The caller owns the returned holder
+  and decides where in the world it goes -- dropping is a placement decision,
+  not something quantity arithmetic does on its own.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Move"><code style="text-decoration:none">Move</code><a href="#Move" class="hash-link" aria-label="Direct link to Move" title="Direct link to Move" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L447"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Move</code><code>(</code><div class="inset_uKQm"><div><code>from<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>to<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Move between two holders in (possibly different) inventories.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Find"><code style="text-decoration:none">Find</code><a href="#Find" class="hash-link" aria-label="Direct link to Find" title="Direct link to Find" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L480"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Find</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div>
+<p>Every holder with a stack of <code>class_name</code>, including nested inventories.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Count"><code style="text-decoration:none">Count</code><a href="#Count" class="hash-link" aria-label="Direct link to Count" title="Direct link to Count" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L505"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Count</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetSlotById"><code style="text-decoration:none">GetSlotById</code><a href="#GetSlotById" class="hash-link" aria-label="Direct link to GetSlotById" title="Direct link to GetSlotById" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L518"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetSlotById</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>holder_id<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AddSlot"><code style="text-decoration:none">AddSlot</code><a href="#AddSlot" class="hash-link" aria-label="Direct link to AddSlot" title="Direct link to AddSlot" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L530"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">AddSlot</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>max_quantity<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>accepts<!-- -->: </code><code class="purple_ieR2">(</code><code class="green_DgR4">(</code><code>config<!-- -->: </code><code class="blue_P4bS">Types.ItemConfig</code><code class="green_DgR4">)</code><code class="green_DgR4"> → </code><code class="blue_P4bS">boolean</code><code class="purple_ieR2">)</code><code class="blue_P4bS">?</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetSlotByNumber"><code style="text-decoration:none">GetSlotByNumber</code><a href="#GetSlotByNumber" class="hash-link" aria-label="Direct link to GetSlotByNumber" title="Direct link to GetSlotByNumber" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L548"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetSlotByNumber</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>slot_number<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder?</code></div><div>
+<p>A slot by its stable number, as opposed to its position in <code>Holders</code>.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RemoveSlot"><code style="text-decoration:none">RemoveSlot</code><a href="#RemoveSlot" class="hash-link" aria-label="Direct link to RemoveSlot" title="Direct link to RemoveSlot" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L559"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">RemoveSlot</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div>
+<p>
+  Removes a slot. Anything in it is returned as a loose stack rather than
+  deleted -- shrinking an inventory is not a reason to destroy items. The
+  caller decides whether it goes to the ground or another slot.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetEmptySlots"><code style="text-decoration:none">GetEmptySlots</code><a href="#GetEmptySlots" class="hash-link" aria-label="Direct link to GetEmptySlots" title="Direct link to GetEmptySlots" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L580"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetEmptySlots</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsEmpty"><code style="text-decoration:none">IsEmpty</code><a href="#IsEmpty" class="hash-link" aria-label="Direct link to IsEmpty" title="Direct link to IsEmpty" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L593"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">IsEmpty</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="SpaceInSlot"><code style="text-decoration:none">SpaceInSlot</code><a href="#SpaceInSlot" class="hash-link" aria-label="Direct link to SpaceInSlot" title="Direct link to SpaceInSlot" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L610"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">SpaceInSlot</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">Types.ItemConfig</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>
+  How much of <code>config</code> fits in one slot, respecting the slot's own limit and
+  the inventory's weight budget. Replaces GetMaxQuantityForSlot /
+  GetSpaceInSlot / GetSlotSpaceForItem, which differed only in which of those
+  two limits they happened to apply.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="SpaceForItem"><code style="text-decoration:none">SpaceForItem</code><a href="#SpaceForItem" class="hash-link" aria-label="Direct link to SpaceForItem" title="Direct link to SpaceForItem" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L623"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">SpaceForItem</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">Types.ItemConfig</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="FindByProperties"><code style="text-decoration:none">FindByProperties</code><a href="#FindByProperties" class="hash-link" aria-label="Direct link to FindByProperties" title="Direct link to FindByProperties" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L641"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">FindByProperties</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>properties<!-- -->: </code><code class="purple_ieR2">{</code><span><code>[</code><code class="blue_P4bS">string</code><code>]</code></span><code>: </code><code class="blue_P4bS">any</code><code class="purple_ieR2">}</code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div>
+<p>Holders whose stack matches every given config property.</p>
+<p>
+  Replaces GetSlotsByItemProperty / GetSlotsByItemProperties: one function,
+  since a single property is just a table of one. Searches nested inventories.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="HasItem"><code style="text-decoration:none">HasItem</code><a href="#HasItem" class="hash-link" aria-label="Direct link to HasItem" title="Direct link to HasItem" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L677"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">HasItem</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AddItem"><code style="text-decoration:none">AddItem</code><a href="#AddItem" class="hash-link" aria-label="Direct link to AddItem" title="Direct link to AddItem" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L695"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">AddItem</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div>
+<p>Put a stack into an inventory, filling matching stacks before empty slots.</p>
+<p>
+  Returns what could not be placed -- as a STACK, not a bare number, so the
+  caller can put it somewhere else. Nothing is discarded.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RemoveItem"><code style="text-decoration:none">RemoveItem</code><a href="#RemoveItem" class="hash-link" aria-label="Direct link to RemoveItem" title="Direct link to RemoveItem" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L712"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">RemoveItem</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>
+  Remove up to <code>quantity</code> of an item. Returns how much was actually removed,
+  so a partial removal is visible rather than silently assumed complete.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TryRemoveItems"><code style="text-decoration:none">TryRemoveItems</code><a href="#TryRemoveItems" class="hash-link" aria-label="Direct link to TryRemoveItems" title="Direct link to TryRemoveItems" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L746"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">TryRemoveItems</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>requirements<!-- -->: </code><code class="purple_ieR2">{</code><span><code>[</code><code class="blue_P4bS">string</code><code>]</code></span><code>: </code><code class="blue_P4bS">number</code><code class="purple_ieR2">}</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>All-or-nothing removal.</p>
+<p>
+  Checks the total first, so a failed craft does not consume half the
+  ingredients -- TryRemoveItems today removes as it goes.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RemoveAllItems"><code style="text-decoration:none">RemoveAllItems</code><a href="#RemoveAllItems" class="hash-link" aria-label="Direct link to RemoveAllItems" title="Direct link to RemoveAllItems" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L766"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">RemoveAllItems</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Swap"><code style="text-decoration:none">Swap</code><a href="#Swap" class="hash-link" aria-label="Direct link to Swap" title="Direct link to Swap" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L786"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Swap</code><code>(</code><div class="inset_uKQm"><div><code>a<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>b<!-- -->: </code><code class="blue_P4bS">ItemHolder</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Exchange the contents of two holders, including any nested inventories.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TransferInto"><code style="text-decoration:none">TransferInto</code><a href="#TransferInto" class="hash-link" aria-label="Direct link to TransferInto" title="Direct link to TransferInto" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L829"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">TransferInto</code><code>(</code><div class="inset_uKQm"><div><code>from<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>to<!-- -->: </code><code class="blue_P4bS">Inventory</code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div>
+<p>Move everything from one inventory into another.</p>
+<p>
+  Returns the stacks that would not fit; they are STILL in <code>from</code>. Replaces
+  EmptyInto / TransferInto.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Destroy"><code style="text-decoration:none">Destroy</code><a href="#Destroy" class="hash-link" aria-label="Direct link to Destroy" title="Direct link to Destroy" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L853"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Destroy</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>Tears down an inventory, returning everything it held.</p>
+<p>
+  Contents are handed back rather than destroyed -- the caller decides where
+  they go. Nested containers come back attached to their stacks.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Serialize"><code style="text-decoration:none">Serialize</code><a href="#Serialize" class="hash-link" aria-label="Direct link to Serialize" title="Direct link to Serialize" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L954"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Serialize</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="blue_P4bS">Types.SerializedInventory</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetNetworkSerialized"><code style="text-decoration:none">GetNetworkSerialized</code><a href="#GetNetworkSerialized" class="hash-link" aria-label="Direct link to GetNetworkSerialized" title="Direct link to GetNetworkSerialized" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L999"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetNetworkSerialized</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="blue_P4bS">Types.NetworkInventory</code></div><div>
+<p>
+  Wire payload for one inventory. See Types.NetworkInventory for why the shape
+  lives there rather than in the route module.
+</p>
+<p>THREE ARRAYS, NOT ONE RECORD PER SLOT</p>
+<p>
+  Slots every live slot number, in order. Position in this array is
+  the slot's position, and the client derives its id as
+  <code>{Id}_{Number}</code>. Sending the numbers -- rather than a count
+  -- is what makes slot add/remove replicable, since numbers
+  are never reused and so have gaps.
+  LimitOverrides only slots whose limit differs from SlotLimit.
+  Contents only slots that hold something.
+</p>
+<p>
+  One record per slot was the obvious shape and the wrong one: BufferNet spends
+  a whole byte on every Optional presence flag, so a 30-slot bag with 10 items
+  spent ~210 bytes saying "empty" 20 times over. Splitting the arrays roughly
+  halves the payload without touching the transport.
+</p>
+<p>
+  NOT REPRESENTED: a holder's <code>Accepts</code> predicate. It is a function, so no wire
+  format can carry it -- the client has to reconstruct slot filters from the
+  inventory's own definition.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetNetworkSubtree"><code style="text-decoration:none">GetNetworkSubtree</code><a href="#GetNetworkSubtree" class="hash-link" aria-label="Direct link to GetNetworkSubtree" title="Direct link to GetNetworkSubtree" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L1078"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">GetNetworkSubtree</code><code>(</code><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">Types.NetworkInventory</code><code class="purple_ieR2">}</code></div><div>
+<p>An inventory and everything nested beneath it, parents first.</p>
+<p>
+  BufferNet structures cannot recurse, so a container's contents travel as their
+  own snapshot; this is what a caller sends together to make the tree complete.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Deserialize"><code style="text-decoration:none">Deserialize</code><a href="#Deserialize" class="hash-link" aria-label="Direct link to Deserialize" title="Direct link to Deserialize" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau#L1112"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>InventoryService<!-- -->:</code><code class="green_DgR4">Deserialize</code><code>(</code><div class="inset_uKQm"><div><code>data<!-- -->: </code><code class="blue_P4bS">Types.SerializedInventory</code><code>,</code></div><div><code>slot_count<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code>(</code><div class="inset_uKQm"><div><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code class="purple_ieR2">{</code><code class="blue_P4bS">string</code><code class="purple_ieR2">}</code></div></div><code>)</code></div><div>
+<p>Rebuild from a save.</p>
+<p>
+  Unknown ClassNames are SKIPPED rather than failing the whole load -- a save
+  naming an item that no longer exists at all should cost the player that
+  stack, not the entire inventory. Deprecated names resolve normally through
+  ItemService, so a retired item comes back as its replacement plus skin.
+</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;Create&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;kind&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.InventoryKind&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;slot_count&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;max_weight&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;slot_max_quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 151,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Get&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 179,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetHolder&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 186,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TrackHolder&quot;,
+            &quot;desc&quot;: &quot;Registers a ground holder so it can take part in nesting/lookup.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 195,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetChildInventory&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 210,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Contains&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 241,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AttachContainer&quot;,
+            &quot;desc&quot;: &quot;Attaches a container&#x27;s contents to the holder its stack sits in.\n\nRefuses a cycle: putting a backpack into one of its own slots would make the\ninventory tree unwalkable and the weight rollup infinite.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 253,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;DetachContainer&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 271,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;HolderWeight&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 311,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Weight&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 318,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FindSlotsFor&quot;,
+            &quot;desc&quot;: &quot;Slots that will take `config`, best destination first.\n\nExposed so a caller can ask \&quot;where would this land\&quot; without moving anything --\nthe UI needs that to draw a drop preview, and GetSlotSpaceForItem was the only\nway to get it before, which computed the answer by walking every slot AND\nreturned five values.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.ItemConfig\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ SlotPriority.Ranked }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 341,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Pickup&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;ground&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 388,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Drop&quot;,
+            &quot;desc&quot;: &quot;Take `quantity` out of a holder and hand it back as a fresh ground pile.\n\nReturns nil when nothing could be taken. The caller owns the returned holder\nand decides where in the world it goes -- dropping is a placement decision,\nnot something quantity arithmetic does on its own.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 411,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Move&quot;,
+            &quot;desc&quot;: &quot;Move between two holders in (possibly different) inventories.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;to&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 447,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Find&quot;,
+            &quot;desc&quot;: &quot;Every holder with a stack of `class_name`, including nested inventories.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 480,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Count&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 505,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetSlotById&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder_id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 518,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AddSlot&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;max_quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;accepts&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;((config: Types.ItemConfig) -&gt; boolean)?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 530,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetSlotByNumber&quot;,
+            &quot;desc&quot;: &quot;A slot by its stable number, as opposed to its position in `Holders`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;slot_number&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 548,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RemoveSlot&quot;,
+            &quot;desc&quot;: &quot;Removes a slot. Anything in it is returned as a loose stack rather than\ndeleted -- shrinking an inventory is not a reason to destroy items. The\ncaller decides whether it goes to the ground or another slot.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 559,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetEmptySlots&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 580,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsEmpty&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 593,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SpaceInSlot&quot;,
+            &quot;desc&quot;: &quot;How much of `config` fits in one slot, respecting the slot&#x27;s own limit and\nthe inventory&#x27;s weight budget. Replaces GetMaxQuantityForSlot /\nGetSpaceInSlot / GetSlotSpaceForItem, which differed only in which of those\ntwo limits they happened to apply.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.ItemConfig\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 610,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SpaceForItem&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.ItemConfig&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 623,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FindByProperties&quot;,
+            &quot;desc&quot;: &quot;Holders whose stack matches every given config property.\n\nReplaces GetSlotsByItemProperty / GetSlotsByItemProperties: one function,\nsince a single property is just a table of one. Searches nested inventories.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;properties&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ [string]: any }\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 641,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;HasItem&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 677,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AddItem&quot;,
+            &quot;desc&quot;: &quot;Put a stack into an inventory, filling matching stacks before empty slots.\n\nReturns what could not be placed -- as a STACK, not a bare number, so the\ncaller can put it somewhere else. Nothing is discarded.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 695,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RemoveItem&quot;,
+            &quot;desc&quot;: &quot;Remove up to `quantity` of an item. Returns how much was actually removed,\nso a partial removal is visible rather than silently assumed complete.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 712,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TryRemoveItems&quot;,
+            &quot;desc&quot;: &quot;All-or-nothing removal.\n\nChecks the total first, so a failed craft does not consume half the\ningredients -- TryRemoveItems today removes as it goes.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;requirements&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ [string]: number }\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 746,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RemoveAllItems&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 766,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Swap&quot;,
+            &quot;desc&quot;: &quot;Exchange the contents of two holders, including any nested inventories.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;a&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;b&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 786,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TransferInto&quot;,
+            &quot;desc&quot;: &quot;Move everything from one inventory into another.\n\nReturns the stacks that would not fit; they are STILL in `from`. Replaces\nEmptyInto / TransferInto.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;to&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 829,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Destroy&quot;,
+            &quot;desc&quot;: &quot;Tears down an inventory, returning everything it held.\n\nContents are handed back rather than destroyed -- the caller decides where\nthey go. Nested containers come back attached to their stacks.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 853,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Serialize&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.SerializedInventory\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 954,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetNetworkSerialized&quot;,
+            &quot;desc&quot;: &quot;Wire payload for one inventory. See Types.NetworkInventory for why the shape\nlives there rather than in the route module.\n\nTHREE ARRAYS, NOT ONE RECORD PER SLOT\n\n  Slots           every live slot number, in order. Position in this array is\n                  the slot&#x27;s position, and the client derives its id as\n                  `{Id}_{Number}`. Sending the numbers -- rather than a count\n                  -- is what makes slot add/remove replicable, since numbers\n                  are never reused and so have gaps.\n  LimitOverrides  only slots whose limit differs from SlotLimit.\n  Contents        only slots that hold something.\n\nOne record per slot was the obvious shape and the wrong one: BufferNet spends\na whole byte on every Optional presence flag, so a 30-slot bag with 10 items\nspent ~210 bytes saying \&quot;empty\&quot; 20 times over. Splitting the arrays roughly\nhalves the payload without touching the transport.\n\nNOT REPRESENTED: a holder&#x27;s `Accepts` predicate. It is a function, so no wire\nformat can carry it -- the client has to reconstruct slot filters from the\ninventory&#x27;s own definition.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.NetworkInventory\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 999,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetNetworkSubtree&quot;,
+            &quot;desc&quot;: &quot;An inventory and everything nested beneath it, parents first.\n\nBufferNet structures cannot recurse, so a container&#x27;s contents travel as their\nown snapshot; this is what a caller sends together to make the tree complete.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ Types.NetworkInventory }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1078,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Deserialize&quot;,
+            &quot;desc&quot;: &quot;Rebuild from a save.\n\nUnknown ClassNames are SKIPPED rather than failing the whole load -- a save\nnaming an item that no longer exists at all should cost the player that\nstack, not the entire inventory. Deprecated names resolve normally through\nItemService, so a retired item comes back as its replacement plus skin.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;data&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.SerializedInventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;slot_count&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ string }&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1112,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;InventoryService&quot;,
+    &quot;desc&quot;: &quot;Inventories, containers and the world, built on HolderService.\n\nHolderService knows how to move quantity between two holders safely.\nThis layer knows what holders MEAN: which inventory they belong to, which\nof them own nested inventories, and how weight rolls up through nesting.\n\nEvery mutating operation still preserves the conservation invariant --\nnothing here destroys a stack to make the numbers work.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 15,
+        &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/InventoryService.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#AddItem" class="table-of-contents__link toc-highlight">:AddItem</a></li><li><a href="#AddSlot" class="table-of-contents__link toc-highlight">:AddSlot</a></li><li><a href="#AttachContainer" class="table-of-contents__link toc-highlight">:AttachContainer</a></li><li><a href="#Contains" class="table-of-contents__link toc-highlight">:Contains</a></li><li><a href="#Count" class="table-of-contents__link toc-highlight">:Count</a></li><li><a href="#Create" class="table-of-contents__link toc-highlight">:Create</a></li><li><a href="#Deserialize" class="table-of-contents__link toc-highlight">:Deserialize</a></li><li><a href="#Destroy" class="table-of-contents__link toc-highlight">:Destroy</a></li><li><a href="#DetachContainer" class="table-of-contents__link toc-highlight">:DetachContainer</a></li><li><a href="#Drop" class="table-of-contents__link toc-highlight">:Drop</a></li><li><a href="#Find" class="table-of-contents__link toc-highlight">:Find</a></li><li><a href="#FindByProperties" class="table-of-contents__link toc-highlight">:FindByProperties</a></li><li><a href="#FindSlotsFor" class="table-of-contents__link toc-highlight">:FindSlotsFor</a></li><li><a href="#Get" class="table-of-contents__link toc-highlight">:Get</a></li><li><a href="#GetChildInventory" class="table-of-contents__link toc-highlight">:GetChildInventory</a></li><li><a href="#GetEmptySlots" class="table-of-contents__link toc-highlight">:GetEmptySlots</a></li><li><a href="#GetHolder" class="table-of-contents__link toc-highlight">:GetHolder</a></li><li><a href="#GetNetworkSerialized" class="table-of-contents__link toc-highlight">:GetNetworkSerialized</a></li><li><a href="#GetNetworkSubtree" class="table-of-contents__link toc-highlight">:GetNetworkSubtree</a></li><li><a href="#GetSlotById" class="table-of-contents__link toc-highlight">:GetSlotById</a></li><li><a href="#GetSlotByNumber" class="table-of-contents__link toc-highlight">:GetSlotByNumber</a></li><li><a href="#HasItem" class="table-of-contents__link toc-highlight">:HasItem</a></li><li><a href="#HolderWeight" class="table-of-contents__link toc-highlight">:HolderWeight</a></li><li><a href="#IsEmpty" class="table-of-contents__link toc-highlight">:IsEmpty</a></li><li><a href="#Move" class="table-of-contents__link toc-highlight">:Move</a></li><li><a href="#Pickup" class="table-of-contents__link toc-highlight">:Pickup</a></li><li><a href="#RemoveAllItems" class="table-of-contents__link toc-highlight">:RemoveAllItems</a></li><li><a href="#RemoveItem" class="table-of-contents__link toc-highlight">:RemoveItem</a></li><li><a href="#RemoveSlot" class="table-of-contents__link toc-highlight">:RemoveSlot</a></li><li><a href="#Serialize" class="table-of-contents__link toc-highlight">:Serialize</a></li><li><a href="#SpaceForItem" class="table-of-contents__link toc-highlight">:SpaceForItem</a></li><li><a href="#SpaceInSlot" class="table-of-contents__link toc-highlight">:SpaceInSlot</a></li><li><a href="#Swap" class="table-of-contents__link toc-highlight">:Swap</a></li><li><a href="#TrackHolder" class="table-of-contents__link toc-highlight">:TrackHolder</a></li><li><a href="#TransferInto" class="table-of-contents__link toc-highlight">:TransferInto</a></li><li><a href="#TryRemoveItems" class="table-of-contents__link toc-highlight">:TryRemoveItems</a></li><li><a href="#Weight" class="table-of-contents__link toc-highlight">:Weight</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

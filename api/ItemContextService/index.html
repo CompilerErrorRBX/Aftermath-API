@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">ItemContextService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemContextService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="ItemContextService | Aftermath"><meta data-rh="true" name="description" content="Registry and driver for item contexts.
+
+Replaces Services/ItemContextService.service.luau.
+
+WHAT CHANGES
+
+  * Contexts are registered, not discovered by `custom_require(&#x27;*.itemcontext&#x27;)`
+    on every call. GetValidContexts re-required the whole wildcard set and
+    re-sorted it each time it was asked.
+
+  * The per-kind context list is computed ONCE, at registration, and cached by
+    ClassName. It only depends on the config, so recomputing it per item was
+    pure waste.
+
+  * The realm is a field, not `RunService:IsClient()` captured at module load.
+    That is what makes both halves testable from one place, and it removes the
+    branch from every call site.
+
+  * The delay is scheduled through `Schedule`, which defaults to task.delay.
+    Tests replace it; nothing else notices."><meta data-rh="true" property="og:description" content="Registry and driver for item contexts.
+
+Replaces Services/ItemContextService.service.luau.
+
+WHAT CHANGES
+
+  * Contexts are registered, not discovered by `custom_require(&#x27;*.itemcontext&#x27;)`
+    on every call. GetValidContexts re-required the whole wildcard set and
+    re-sorted it each time it was asked.
+
+  * The per-kind context list is computed ONCE, at registration, and cached by
+    ClassName. It only depends on the config, so recomputing it per item was
+    pure waste.
+
+  * The realm is a field, not `RunService:IsClient()` captured at module load.
+    That is what makes both halves testable from one place, and it removes the
+    branch from every call site.
+
+  * The delay is scheduled through `Schedule`, which defaults to task.delay.
+    Tests replace it; nothing else notices."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemContextService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemContextService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemContextService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/ItemService"><span title="​Item​Service" class="linkLabel_WmDU">​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/ItemContext"><span title="​Item​Context" class="linkLabel_WmDU">​Item​Context</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/Aftermath-API/api/ItemContextService"><span title="​Item​Context​Service" class="linkLabel_WmDU">​Item​Context​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/Behaviour"><span title="​Behaviour" class="linkLabel_WmDU">​Behaviour</span></a></li></ul></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Item</span><span style="display:inline-block">Context</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>Registry and driver for item contexts.</p>
+<p>Replaces Services/ItemContextService.service.luau.</p>
+<p>WHAT CHANGES</p>
+<ul>
+  <li>
+    <p>
+      Contexts are registered, not discovered by <code>custom_require('*.itemcontext')</code>
+      on every call. GetValidContexts re-required the whole wildcard set and
+      re-sorted it each time it was asked.
+    </p>
+  </li>
+  <li>
+    <p>
+      The per-kind context list is computed ONCE, at registration, and cached by
+      ClassName. It only depends on the config, so recomputing it per item was
+      pure waste.
+    </p>
+  </li>
+  <li>
+    <p>
+      The realm is a field, not <code>RunService:IsClient()</code> captured at module load.
+      That is what makes both halves testable from one place, and it removes the
+      branch from every call site.
+    </p>
+  </li>
+  <li>
+    <p>
+      The delay is scheduled through <code>Schedule</code>, which defaults to task.delay.
+      Tests replace it; nothing else notices.
+    </p>
+  </li>
+</ul>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Register"><code style="text-decoration:none">Register</code><a href="#Register" class="hash-link" aria-label="Direct link to Register" title="Direct link to Register" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L109"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">Register</code><code>(</code><code>list<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ContextDefinition</code><code class="purple_ieR2">}</code><code>) → </code><code>(</code><code>)</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RegisterFolder"><code style="text-decoration:none">RegisterFolder</code><a href="#RegisterFolder" class="hash-link" aria-label="Direct link to RegisterFolder" title="Direct link to RegisterFolder" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L123"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">RegisterFolder</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Instance" target="_blank" rel="noopener noreferrer">Instance<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code>(</code><code>)</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Get"><code style="text-decoration:none">Get</code><a href="#Get" class="hash-link" aria-label="Direct link to Get" title="Direct link to Get" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L138"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">Get</code><code>(</code><code>name<!-- -->: </code><code class="blue_P4bS">string</code><code>) → </code><code class="blue_P4bS">ContextDefinition?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetContextsFor"><code style="text-decoration:none">GetContextsFor</code><a href="#GetContextsFor" class="hash-link" aria-label="Direct link to GetContextsFor" title="Direct link to GetContextsFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L153"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">GetContextsFor</code><code>(</code><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ContextDefinition</code><code class="purple_ieR2">}</code></div><div>
+<p>The contexts available to an item KIND, best first.</p>
+<p>
+  <code>ContextPriorityOverride</code> lets one item reorder its own menu -- a lighter
+  promoting 'Use' above 'Equip', say. Applied here rather than at display time
+  so the ordering is one fact in one place.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetAvailable"><code style="text-decoration:none">GetAvailable</code><a href="#GetAvailable" class="hash-link" aria-label="Direct link to GetAvailable" title="Direct link to GetAvailable" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L190"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">GetAvailable</code><code>(</code><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ContextDefinition</code><code class="purple_ieR2">}</code></div><div>
+<p>Of those, the ones available right now.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetPriority"><code style="text-decoration:none">GetPriority</code><a href="#GetPriority" class="hash-link" aria-label="Direct link to GetPriority" title="Direct link to GetPriority" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L207"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">GetPriority</code><code>(</code><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code><code>) → </code><code class="blue_P4bS">ContextDefinition?</code></div><div>
+<p>The highest-priority available context -- what a double-click runs.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="SetContextItem"><code style="text-decoration:none">SetContextItem</code><a href="#SetContextItem" class="hash-link" aria-label="Direct link to SetContextItem" title="Direct link to SetContextItem" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L222"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">SetContextItem</code><code>(</code><code>item<!-- -->: </code><code class="blue_P4bS">ItemInstance?</code><code>) → </code><code>(</code><code>)</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DurationFor"><code style="text-decoration:none">DurationFor</code><a href="#DurationFor" class="hash-link" aria-label="Direct link to DurationFor" title="Direct link to DurationFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L241"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">DurationFor</code><code>(</code><div class="inset_uKQm"><div><code>definition<!-- -->: </code><code class="blue_P4bS">ContextDefinition</code><code>,</code></div><div><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>How long this context takes for this item.</p>
+<p>
+  The CONTEXT item's duration wins over the subject's -- using a slow tool on a
+  fast item should take the tool's time. Carried over unchanged.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Cancel"><code style="text-decoration:none">Cancel</code><a href="#Cancel" class="hash-link" aria-label="Direct link to Cancel" title="Direct link to Cancel" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L280"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">Cancel</code><code>(</code><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Cancels whatever this player had in flight.</p>
+<p>
+  Returns whether anything was cancelled -- Activate uses that to make a second
+  press of the same key abort rather than stack, which is what the old
+  DectivateCurrentContextAction did.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Activate"><code style="text-decoration:none">Activate</code><a href="#Activate" class="hash-link" aria-label="Direct link to Activate" title="Direct link to Activate" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L309"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">Activate</code><code>(</code><div class="inset_uKQm"><div><code>name<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Run a context.</p>
+<p>
+  Preaction runs immediately. If the context has a duration, Action is deferred
+  and can be cancelled until it fires; otherwise Action runs inline.
+</p>
+<p>
+  Returns false when nothing was started -- either the context is unknown, or a
+  press cancelled an action already in flight.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ActivatePriority"><code style="text-decoration:none">ActivatePriority</code><a href="#ActivatePriority" class="hash-link" aria-label="Direct link to ActivatePriority" title="Direct link to ActivatePriority" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L365"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">ActivatePriority</code><code>(</code><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Run the highest-priority available context.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsBusy"><code style="text-decoration:none">IsBusy</code><a href="#IsBusy" class="hash-link" aria-label="Direct link to IsBusy" title="Direct link to IsBusy" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau#L377"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemContextService<!-- -->:</code><code class="green_DgR4">IsBusy</code><code>(</code><code>request<!-- -->: </code><code class="blue_P4bS">ContextRequest</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;Register&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;list&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ContextDefinition }&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 109,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RegisterFolder&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Instance&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 123,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Get&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextDefinition?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 138,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetContextsFor&quot;,
+            &quot;desc&quot;: &quot;The contexts available to an item KIND, best first.\n\n`ContextPriorityOverride` lets one item reorder its own menu -- a lighter\npromoting &#x27;Use&#x27; above &#x27;Equip&#x27;, say. Applied here rather than at display time\nso the ordering is one fact in one place.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemConfig&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ContextDefinition }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 153,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetAvailable&quot;,
+            &quot;desc&quot;: &quot;Of those, the ones available right now.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ContextDefinition }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 190,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetPriority&quot;,
+            &quot;desc&quot;: &quot;The highest-priority available context -- what a double-click runs.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextDefinition?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 207,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SetContextItem&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;item&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemInstance?&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 222,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;DurationFor&quot;,
+            &quot;desc&quot;: &quot;How long this context takes for this item.\n\nThe CONTEXT item&#x27;s duration wins over the subject&#x27;s -- using a slow tool on a\nfast item should take the tool&#x27;s time. Carried over unchanged.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;definition&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextDefinition&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 241,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Cancel&quot;,
+            &quot;desc&quot;: &quot;Cancels whatever this player had in flight.\n\nReturns whether anything was cancelled -- Activate uses that to make a second\npress of the same key abort rather than stack, which is what the old\nDectivateCurrentContextAction did.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 280,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Activate&quot;,
+            &quot;desc&quot;: &quot;Run a context.\n\nPreaction runs immediately. If the context has a duration, Action is deferred\nand can be cancelled until it fires; otherwise Action runs inline.\n\nReturns false when nothing was started -- either the context is unknown, or a\npress cancelled an action already in flight.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 309,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ActivatePriority&quot;,
+            &quot;desc&quot;: &quot;Run the highest-priority available context.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 365,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsBusy&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;request&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContextRequest&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 377,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;ItemContextService&quot;,
+    &quot;desc&quot;: &quot;Registry and driver for item contexts.\n\nReplaces Services/ItemContextService.service.luau.\n\nWHAT CHANGES\n\n  * Contexts are registered, not discovered by `custom_require(&#x27;*.itemcontext&#x27;)`\n    on every call. GetValidContexts re-required the whole wildcard set and\n    re-sorted it each time it was asked.\n\n  * The per-kind context list is computed ONCE, at registration, and cached by\n    ClassName. It only depends on the config, so recomputing it per item was\n    pure waste.\n\n  * The realm is a field, not `RunService:IsClient()` captured at module load.\n    That is what makes both halves testable from one place, and it removes the\n    branch from every call site.\n\n  * The delay is scheduled through `Schedule`, which defaults to task.delay.\n    Tests replace it; nothing else notices.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 27,
+        &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Item2/ItemContextService.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Activate" class="table-of-contents__link toc-highlight">:Activate</a></li><li><a href="#ActivatePriority" class="table-of-contents__link toc-highlight">:ActivatePriority</a></li><li><a href="#Cancel" class="table-of-contents__link toc-highlight">:Cancel</a></li><li><a href="#DurationFor" class="table-of-contents__link toc-highlight">:DurationFor</a></li><li><a href="#Get" class="table-of-contents__link toc-highlight">:Get</a></li><li><a href="#GetAvailable" class="table-of-contents__link toc-highlight">:GetAvailable</a></li><li><a href="#GetContextsFor" class="table-of-contents__link toc-highlight">:GetContextsFor</a></li><li><a href="#GetPriority" class="table-of-contents__link toc-highlight">:GetPriority</a></li><li><a href="#IsBusy" class="table-of-contents__link toc-highlight">:IsBusy</a></li><li><a href="#Register" class="table-of-contents__link toc-highlight">:Register</a></li><li><a href="#RegisterFolder" class="table-of-contents__link toc-highlight">:RegisterFolder</a></li><li><a href="#SetContextItem" class="table-of-contents__link toc-highlight">:SetContextItem</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

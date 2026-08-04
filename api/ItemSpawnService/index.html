@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">ItemSpawnService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemSpawnService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="ItemSpawnService | Aftermath"><meta data-rh="true" name="description" content="Turns a rolled loot table into stacks that actually go somewhere.
+
+`ItemSpawnData` decides WHAT spawns and owns no items. This decides what that
+becomes: it resolves each `ItemSet`&#x27;s ClassName through `ItemService`, builds
+an `ItemStack`, and places it -- nesting included, so a crate can spawn with a
+backpack in it that has things in the backpack.
+
+WHAT CHANGED
+
+`spawnItemFromItemSet` constructed an item object per set, called
+`SetQuantity` and `SetDurability` on it, and recursed into
+`parent_item.InventoryManager:AddItem(child_item)`. Three things went wrong
+there and are gone here:
+
+  * `SetQuantity` clamps to the stack limit and destroys at zero, so a spawn
+    table asking for more than a stack silently produced less and never said
+    so. `Fill` returns what did not fit.
+  * a child whose parent had no InventoryManager warned and then added it
+    anyway, to nil. Nesting is explicit now and reports where it failed.
+  * an unknown ClassName warned per occurrence, every respawn, forever.
+    Unresolved sets come back in the result instead.
+
+DURABILITY IS A PERCENTAGE
+
+`ItemSet.Durability` is 0-100 and is multiplied by the item&#x27;s own
+MaxDurability. The original did that multiplication two functions away from
+where the field was set, which is a good way to read it as absolute."><meta data-rh="true" property="og:description" content="Turns a rolled loot table into stacks that actually go somewhere.
+
+`ItemSpawnData` decides WHAT spawns and owns no items. This decides what that
+becomes: it resolves each `ItemSet`&#x27;s ClassName through `ItemService`, builds
+an `ItemStack`, and places it -- nesting included, so a crate can spawn with a
+backpack in it that has things in the backpack.
+
+WHAT CHANGED
+
+`spawnItemFromItemSet` constructed an item object per set, called
+`SetQuantity` and `SetDurability` on it, and recursed into
+`parent_item.InventoryManager:AddItem(child_item)`. Three things went wrong
+there and are gone here:
+
+  * `SetQuantity` clamps to the stack limit and destroys at zero, so a spawn
+    table asking for more than a stack silently produced less and never said
+    so. `Fill` returns what did not fit.
+  * a child whose parent had no InventoryManager warned and then added it
+    anyway, to nil. Nesting is explicit now and reports where it failed.
+  * an unknown ClassName warned per occurrence, every respawn, forever.
+    Unresolved sets come back in the result instead.
+
+DURABILITY IS A PERCENTAGE
+
+`ItemSet.Durability` is 0-100 and is multiplied by the item&#x27;s own
+MaxDurability. The original did that multiplication two functions away from
+where the field was set, which is a good way to read it as absolute."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemSpawnService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemSpawnService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ItemSpawnService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Item</span><span style="display:inline-block">Spawn</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>Turns a rolled loot table into stacks that actually go somewhere.</p>
+<p>
+  <code>ItemSpawnData</code> decides WHAT spawns and owns no items. This decides what that
+  becomes: it resolves each <code>ItemSet</code>'s ClassName through <code>ItemService</code>, builds
+  an <code>ItemStack</code>, and places it -- nesting included, so a crate can spawn with a
+  backpack in it that has things in the backpack.
+</p>
+<p>WHAT CHANGED</p>
+<p>
+  <code>spawnItemFromItemSet</code> constructed an item object per set, called
+  <code>SetQuantity</code> and <code>SetDurability</code> on it, and recursed into
+  <code>parent_item.InventoryManager:AddItem(child_item)</code>. Three things went wrong
+  there and are gone here:
+</p>
+<ul>
+  <li>
+    <code>SetQuantity</code> clamps to the stack limit and destroys at zero, so a spawn
+    table asking for more than a stack silently produced less and never said
+    so. <code>Fill</code> returns what did not fit.
+  </li>
+  <li>
+    a child whose parent had no InventoryManager warned and then added it
+    anyway, to nil. Nesting is explicit now and reports where it failed.
+  </li>
+  <li>
+    an unknown ClassName warned per occurrence, every respawn, forever.
+    Unresolved sets come back in the result instead.
+  </li>
+</ul>
+<p>DURABILITY IS A PERCENTAGE</p>
+<p>
+  <code>ItemSet.Durability</code> is 0-100 and is multiplied by the item's own
+  MaxDurability. The original did that multiplication two functions away from
+  where the field was set, which is a good way to read it as absolute.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ToStack"><code style="text-decoration:none">ToStack</code><a href="#ToStack" class="hash-link" aria-label="Direct link to ToStack" title="Direct link to ToStack" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L97"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">ToStack</code><code>(</code><code>item_set<!-- -->: </code><code class="blue_P4bS">ItemSet</code><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div>
+<p>Build one stack from one rolled set.</p>
+<p>
+  Returns nil when the ClassName does not resolve. Durability is applied as a
+  percentage of the item's own maximum; a set that names no durability gets
+  the item's default.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ToStacks"><code style="text-decoration:none">ToStacks</code><a href="#ToStacks" class="hash-link" aria-label="Direct link to ToStacks" title="Direct link to ToStacks" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L125"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">ToStacks</code><code>(</code><code>item_sets<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemSet</code><code class="purple_ieR2">}</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>Flatten a rolled tree into stacks, losing the nesting.</p>
+<p>
+  For callers that only want "what items did this produce" -- a preview, a
+  drop table, <code>ContainerService.SpawnProvider</code>. Use <code>Fill</code> when the nesting
+  matters.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Fill"><code style="text-decoration:none">Fill</code><a href="#Fill" class="hash-link" aria-label="Direct link to Fill" title="Direct link to Fill" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L149"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">Fill</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>item_sets<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemSet</code><code class="purple_ieR2">}</code></div></div><code>) → </code><code class="blue_P4bS">FillResult</code></div><div>
+<p>Place a rolled tree into an inventory, building nested inventories as needed.</p>
+<p>
+  Returns what was placed and what was not, with a reason -- the original
+  warned and carried on, so a loot table that had drifted out of date kept
+  spawning less than it claimed with nothing but console noise to show for it.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="FindHolder"><code style="text-decoration:none">FindHolder</code><a href="#FindHolder" class="hash-link" aria-label="Direct link to FindHolder" title="Direct link to FindHolder" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L236"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">FindHolder</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder?</code></div><div>
+<p>The holder a just-placed stack of this kind ended up in.</p>
+<p>
+  Nesting has to attach to a holder, and <code>TransferToGroup</code> does not say which
+  one it filled. Searching for the class afterwards is unambiguous in practice
+  because a nested spawn is a container item and containers do not stack.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="FindPlaced"><code style="text-decoration:none">FindPlaced</code><a href="#FindPlaced" class="hash-link" aria-label="Direct link to FindPlaced" title="Direct link to FindPlaced" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L252"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">FindPlaced</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AttachChildInventory"><code style="text-decoration:none">AttachChildInventory</code><a href="#AttachChildInventory" class="hash-link" aria-label="Direct link to AttachChildInventory" title="Direct link to AttachChildInventory" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L264"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">AttachChildInventory</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code></div></div><code>) → </code><code class="blue_P4bS">Inventory?</code></div><div>
+<p>Give a placed container item an inventory of its own.</p>
+<p>Returns nil when the item is not a container.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Spawn"><code style="text-decoration:none">Spawn</code><a href="#Spawn" class="hash-link" aria-label="Direct link to Spawn" title="Direct link to Spawn" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L295"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">Spawn</code><code>(</code><div class="inset_uKQm"><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>spawn_data<!-- -->: </code><code class="blue_P4bS">SpawnData</code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">RollOptions?</code></div></div><code>) → </code><code class="blue_P4bS">FillResult</code></div><div>
+<p>Roll <code>spawn_data</code> and fill <code>inventory</code> from it, in one call.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ProviderFor"><code style="text-decoration:none">ProviderFor</code><a href="#ProviderFor" class="hash-link" aria-label="Direct link to ProviderFor" title="Direct link to ProviderFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L312"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">ProviderFor</code><code>(</code><div class="inset_uKQm"><div><code>spawn_data<!-- -->: </code><code class="blue_P4bS">SpawnData</code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">RollOptions?</code></div></div><code>) → </code><code class="purple_ieR2">(</code><code class="blue_P4bS">any</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>A <code>ContainerService.SpawnProvider</code> bound to a spawn table.</p>
+<p>
+  The provider contract is flat -- it hands back stacks and lets the container
+  place them -- so nesting is lost through this path. A container whose loot
+  includes containers should be filled with <code>Spawn</code> directly.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="OwnedProvider"><code style="text-decoration:none">OwnedProvider</code><a href="#OwnedProvider" class="hash-link" aria-label="Direct link to OwnedProvider" title="Direct link to OwnedProvider" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau#L346"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ItemSpawnService<!-- -->:</code><code class="green_DgR4">OwnedProvider</code><code>(</code><code>options<!-- -->: </code><code class="blue_P4bS">RollOptions?</code><code>) → </code><code class="purple_ieR2">(</code><code class="blue_P4bS">any</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>A provider for owners that carry their OWN spawn table.</p>
+<p>
+  <code>ProviderFor</code> binds one table for every caller, which suits a container type
+  whose loot is fixed. A ground spawner is the other case: each one references
+  different spawn data, so the provider has to read it off the owner.
+</p>
+<p>
+  Works for anything shaped <code>{ SpawnData, State = { Randomness } }</code>, which is
+  both <code>GroundSpawnerData</code> and <code>ContainerData</code>. An owner with no spawn data
+  yields nothing rather than erroring -- an unconfigured spawner is a normal
+  state, not a fault.
+</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;ToStack&quot;,
+            &quot;desc&quot;: &quot;Build one stack from one rolled set.\n\nReturns nil when the ClassName does not resolve. Durability is applied as a\npercentage of the item&#x27;s own maximum; a set that names no durability gets\nthe item&#x27;s default.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;item_set&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemSet&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 97,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ToStacks&quot;,
+            &quot;desc&quot;: &quot;Flatten a rolled tree into stacks, losing the nesting.\n\nFor callers that only want \&quot;what items did this produce\&quot; -- a preview, a\ndrop table, `ContainerService.SpawnProvider`. Use `Fill` when the nesting\nmatters.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;item_sets&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemSet }&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 125,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Fill&quot;,
+            &quot;desc&quot;: &quot;Place a rolled tree into an inventory, building nested inventories as needed.\n\nReturns what was placed and what was not, with a reason -- the original\nwarned and carried on, so a loot table that had drifted out of date kept\nspawning less than it claimed with nothing but console noise to show for it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;item_sets&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemSet }&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;FillResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 149,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FindHolder&quot;,
+            &quot;desc&quot;: &quot;The holder a just-placed stack of this kind ended up in.\n\nNesting has to attach to a holder, and `TransferToGroup` does not say which\none it filled. Searching for the class afterwards is unambiguous in practice\nbecause a nested spawn is a container item and containers do not stack.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 236,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FindPlaced&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 252,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AttachChildInventory&quot;,
+            &quot;desc&quot;: &quot;Give a placed container item an inventory of its own.\n\nReturns nil when the item is not a container.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 264,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Spawn&quot;,
+            &quot;desc&quot;: &quot;Roll `spawn_data` and fill `inventory` from it, in one call.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;spawn_data&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;SpawnData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;RollOptions?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;FillResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 295,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ProviderFor&quot;,
+            &quot;desc&quot;: &quot;A `ContainerService.SpawnProvider` bound to a spawn table.\n\nThe provider contract is flat -- it hands back stacks and lets the container\nplace them -- so nesting is lost through this path. A container whose loot\nincludes containers should be filled with `Spawn` directly.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawn_data&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;SpawnData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;RollOptions?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(any) -&gt; { ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 312,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OwnedProvider&quot;,
+            &quot;desc&quot;: &quot;A provider for owners that carry their OWN spawn table.\n\n`ProviderFor` binds one table for every caller, which suits a container type\nwhose loot is fixed. A ground spawner is the other case: each one references\ndifferent spawn data, so the provider has to read it off the owner.\n\nWorks for anything shaped `{ SpawnData, State = { Randomness } }`, which is\nboth `GroundSpawnerData` and `ContainerData`. An owner with no spawn data\nyields nothing rather than erroring -- an unconfigured spawner is a normal\nstate, not a fault.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;RollOptions?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(any) -&gt; { ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 346,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;ItemSpawnService&quot;,
+    &quot;desc&quot;: &quot;Turns a rolled loot table into stacks that actually go somewhere.\n\n`ItemSpawnData` decides WHAT spawns and owns no items. This decides what that\nbecomes: it resolves each `ItemSet`&#x27;s ClassName through `ItemService`, builds\nan `ItemStack`, and places it -- nesting included, so a crate can spawn with a\nbackpack in it that has things in the backpack.\n\nWHAT CHANGED\n\n`spawnItemFromItemSet` constructed an item object per set, called\n`SetQuantity` and `SetDurability` on it, and recursed into\n`parent_item.InventoryManager:AddItem(child_item)`. Three things went wrong\nthere and are gone here:\n\n  * `SetQuantity` clamps to the stack limit and destroys at zero, so a spawn\n    table asking for more than a stack silently produced less and never said\n    so. `Fill` returns what did not fit.\n  * a child whose parent had no InventoryManager warned and then added it\n    anyway, to nil. Nesting is explicit now and reports where it failed.\n  * an unknown ClassName warned per occurrence, every respawn, forever.\n    Unresolved sets come back in the result instead.\n\nDURABILITY IS A PERCENTAGE\n\n`ItemSet.Durability` is 0-100 and is multiplied by the item&#x27;s own\nMaxDurability. The original did that multiplication two functions away from\nwhere the field was set, which is a good way to read it as absolute.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 34,
+        &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ItemSpawnService.service.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#AttachChildInventory" class="table-of-contents__link toc-highlight">:AttachChildInventory</a></li><li><a href="#Fill" class="table-of-contents__link toc-highlight">:Fill</a></li><li><a href="#FindHolder" class="table-of-contents__link toc-highlight">:FindHolder</a></li><li><a href="#FindPlaced" class="table-of-contents__link toc-highlight">:FindPlaced</a></li><li><a href="#OwnedProvider" class="table-of-contents__link toc-highlight">:OwnedProvider</a></li><li><a href="#ProviderFor" class="table-of-contents__link toc-highlight">:ProviderFor</a></li><li><a href="#Spawn" class="table-of-contents__link toc-highlight">:Spawn</a></li><li><a href="#ToStack" class="table-of-contents__link toc-highlight">:ToStack</a></li><li><a href="#ToStacks" class="table-of-contents__link toc-highlight">:ToStacks</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

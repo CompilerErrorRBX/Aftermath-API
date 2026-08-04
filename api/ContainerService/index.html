@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">ContainerService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/ContainerService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="ContainerService | Aftermath"><meta data-rh="true" name="description" content="World containers: crates, lockers, vehicle storage, loot piles.
+
+WHAT CHANGED
+
+A container&#x27;s contents were a bespoke `InventoryController` reached through
+`container.Inventory`, and opening one reached all the way into
+`client.Manager.AccessibleInventoryManager` to attach it -- so the service
+that owns crates also owned a piece of the replication protocol, and could
+not be exercised without a live client session.
+
+Here a container&#x27;s contents are an ordinary `Inventory` of kind `Container`,
+and `Open` RETURNS the inventories to expose rather than attaching them. Who
+receives them is the replication layer&#x27;s business. That inversion is what
+lets open/close/search/lock be tested with no player, no network and no
+place.
+
+`ItemGroup` containers -- the ones whose slots hold items that are themselves
+containers, like a pile of backpacks -- were the messiest part of that
+coupling: opening one walked every slot, found each item&#x27;s nested
+inventories, and attached them individually with `Silent` metadata, then
+re-ran the same walk on every slot change. `InventoryService` already tracks
+nesting by holder id, so that walk is `CollectInventories` and the change
+handling is one signal.
+
+WHAT IS DELEGATED
+
+Loot spawning still belongs to `ItemSpawnDataService`, which is not ported.
+`SpawnProvider` is the seam it will plug into; until then `SpawnItems`
+reports that it spawned nothing, which is exactly what an unconfigured
+container should do. Sounds and attribute writes live in the binding."><meta data-rh="true" property="og:description" content="World containers: crates, lockers, vehicle storage, loot piles.
+
+WHAT CHANGED
+
+A container&#x27;s contents were a bespoke `InventoryController` reached through
+`container.Inventory`, and opening one reached all the way into
+`client.Manager.AccessibleInventoryManager` to attach it -- so the service
+that owns crates also owned a piece of the replication protocol, and could
+not be exercised without a live client session.
+
+Here a container&#x27;s contents are an ordinary `Inventory` of kind `Container`,
+and `Open` RETURNS the inventories to expose rather than attaching them. Who
+receives them is the replication layer&#x27;s business. That inversion is what
+lets open/close/search/lock be tested with no player, no network and no
+place.
+
+`ItemGroup` containers -- the ones whose slots hold items that are themselves
+containers, like a pile of backpacks -- were the messiest part of that
+coupling: opening one walked every slot, found each item&#x27;s nested
+inventories, and attached them individually with `Silent` metadata, then
+re-ran the same walk on every slot change. `InventoryService` already tracks
+nesting by holder id, so that walk is `CollectInventories` and the change
+handling is one signal.
+
+WHAT IS DELEGATED
+
+Loot spawning still belongs to `ItemSpawnDataService`, which is not ported.
+`SpawnProvider` is the seam it will plug into; until then `SpawnItems`
+reports that it spawned nothing, which is exactly what an unconfigured
+container should do. Sounds and attribute writes live in the binding."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ContainerService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ContainerService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/ContainerService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Container</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>World containers: crates, lockers, vehicle storage, loot piles.</p>
+<p>WHAT CHANGED</p>
+<p>
+  A container's contents were a bespoke <code>InventoryController</code> reached through
+  <code>container.Inventory</code>, and opening one reached all the way into
+  <code>client.Manager.AccessibleInventoryManager</code> to attach it -- so the service
+  that owns crates also owned a piece of the replication protocol, and could
+  not be exercised without a live client session.
+</p>
+<p>
+  Here a container's contents are an ordinary <code>Inventory</code> of kind <code>Container</code>,
+  and <code>Open</code> RETURNS the inventories to expose rather than attaching them. Who
+  receives them is the replication layer's business. That inversion is what
+  lets open/close/search/lock be tested with no player, no network and no
+  place.
+</p>
+<p>
+  <code>ItemGroup</code> containers -- the ones whose slots hold items that are themselves
+  containers, like a pile of backpacks -- were the messiest part of that
+  coupling: opening one walked every slot, found each item's nested
+  inventories, and attached them individually with <code>Silent</code> metadata, then
+  re-ran the same walk on every slot change. <code>InventoryService</code> already tracks
+  nesting by holder id, so that walk is <code>CollectInventories</code> and the change
+  handling is one signal.
+</p>
+<p>WHAT IS DELEGATED</p>
+<p>
+  Loot spawning still belongs to <code>ItemSpawnDataService</code>, which is not ported.
+  <code>SpawnProvider</code> is the seam it will plug into; until then <code>SpawnItems</code>
+  reports that it spawned nothing, which is exactly what an unconfigured
+  container should do. Sounds and attribute writes live in the binding.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Create"><code style="text-decoration:none">Create</code><a href="#Create" class="hash-link" aria-label="Direct link to Create" title="Direct link to Create" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L274"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Create</code><code>(</code><div class="inset_uKQm"><div><code>config<!-- -->: </code><code class="blue_P4bS">ContainerConfig?</code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">CreateOptions?</code></div></div><code>) → </code><code class="blue_P4bS">ContainerData</code></div><div>
+<p>Create a container and the inventory behind it.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Get"><code style="text-decoration:none">Get</code><a href="#Get" class="hash-link" aria-label="Direct link to Get" title="Direct link to Get" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L336"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Get</code><code>(</code><code>id<!-- -->: </code><code class="blue_P4bS">number</code><code>) → </code><code class="blue_P4bS">ContainerData?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetAll"><code style="text-decoration:none">GetAll</code><a href="#GetAll" class="hash-link" aria-label="Direct link to GetAll" title="Direct link to GetAll" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L345"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">GetAll</code><code>(</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ContainerData</code><code class="purple_ieR2">}</code></div><div>
+<p>Every live container. Copied out, so removal during iteration is safe.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Remove"><code style="text-decoration:none">Remove</code><a href="#Remove" class="hash-link" aria-label="Direct link to Remove" title="Direct link to Remove" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L358"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Remove</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>Tear a container down, handing back whatever it still held.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Clear"><code style="text-decoration:none">Clear</code><a href="#Clear" class="hash-link" aria-label="Direct link to Clear" title="Direct link to Clear" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L371"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Clear</code><code>(</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Drop every container. Used by tests and by a place teardown.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="SetModified"><code style="text-decoration:none">SetModified</code><a href="#SetModified" class="hash-link" aria-label="Direct link to SetModified" title="Direct link to SetModified" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L385"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">SetModified</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Mark the container as needing a respawn.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ToggleEnabled"><code style="text-decoration:none">ToggleEnabled</code><a href="#ToggleEnabled" class="hash-link" aria-label="Direct link to ToggleEnabled" title="Direct link to ToggleEnabled" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L395"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">ToggleEnabled</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>enabled<!-- -->: </code><code class="blue_P4bS">boolean</code></div></div><code>) → </code><code>(</code><code>)</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="HasSearched"><code style="text-decoration:none">HasSearched</code><a href="#HasSearched" class="hash-link" aria-label="Direct link to HasSearched" title="Direct link to HasSearched" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L407"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">HasSearched</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Whether a given player has searched this container since its last respawn.</p>
+<p>Keyed on UserId, matching the OwnerId every other service already uses.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetCFrame"><code style="text-decoration:none">GetCFrame</code><a href="#GetCFrame" class="hash-link" aria-label="Direct link to GetCFrame" title="Direct link to GetCFrame" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L442"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">GetCFrame</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/CFrame" target="_blank" rel="noopener noreferrer">CFrame<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div><div>
+<p>The container's current placement.</p>
+<p>
+  A movable container (vehicle storage) reads its object's pivot, because its
+  stored CFrame went stale the moment it drove away.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsInRange"><code style="text-decoration:none">IsInRange</code><a href="#IsInRange" class="hash-link" aria-label="Direct link to IsInRange" title="Direct link to IsInRange" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L460"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">IsInRange</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Whether <code>player</code> is close enough to interact.</p>
+<p>Reads the character fresh, per the no-session-object convention.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Unlock"><code style="text-decoration:none">Unlock</code><a href="#Unlock" class="hash-link" aria-label="Direct link to Unlock" title="Direct link to Unlock" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L476"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Unlock</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DamageLock"><code style="text-decoration:none">DamageLock</code><a href="#DamageLock" class="hash-link" aria-label="Direct link to DamageLock" title="Direct link to DamageLock" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L495"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">DamageLock</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>damage<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Damage the lock. Returns true only on the hit that breaks it.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="SpawnItems"><code style="text-decoration:none">SpawnItems</code><a href="#SpawnItems" class="hash-link" aria-label="Direct link to SpawnItems" title="Direct link to SpawnItems" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L531"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">SpawnItems</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Fill the container from its spawn data.</p>
+<p>
+  Returns whether anything was placed. Delegates to <code>SpawnProvider</code>; see the
+  header for why.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="DespawnItems"><code style="text-decoration:none">DespawnItems</code><a href="#DespawnItems" class="hash-link" aria-label="Direct link to DespawnItems" title="Direct link to DespawnItems" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L578"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">DespawnItems</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemStack</code><code class="purple_ieR2">}</code></div><div>
+<p>Empty the container.</p>
+<p>
+  Returns the stacks that were in it. The old version destroyed each spawned
+  item in place; a stack owns no identity, so dropping the reference is what
+  destruction means here -- and handing them back lets a caller relocate them
+  instead.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Take"><code style="text-decoration:none">Take</code><a href="#Take" class="hash-link" aria-label="Direct link to Take" title="Direct link to Take" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L601"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Take</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>destination<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Move quantity out of one of the container's slots into <code>destination</code>.</p>
+<p>
+  Returns what actually moved. The old signature returned
+  <code>(took_anything, remaining)</code> and recomputed the remainder from three
+  separate quantities at the call site; <code>TransferResult</code> carries both, named.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TakeFor"><code style="text-decoration:none">TakeFor</code><a href="#TakeFor" class="hash-link" aria-label="Direct link to TakeFor" title="Direct link to TakeFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L637"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">TakeFor</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>destination<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p><code>Take</code>, gated on range and on the container being open to that player.</p>
+<p>
+  The gate lives here because it is the authority check: a client asking to
+  take something is not trusted about where it is standing, nor about whether
+  it ever opened the container.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Deposit"><code style="text-decoration:none">Deposit</code><a href="#Deposit" class="hash-link" aria-label="Direct link to Deposit" title="Direct link to Deposit" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L663"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Deposit</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Put quantity from <code>holder</code> into the container.</p>
+<p>
+  The mirror of <code>Take</code>, and the reason a drop pile works: a container is just
+  an inventory, so depositing is the same transfer in the other direction.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="CollectInventories"><code style="text-decoration:none">CollectInventories</code><a href="#CollectInventories" class="hash-link" aria-label="Direct link to CollectInventories" title="Direct link to CollectInventories" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L696"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">CollectInventories</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">Inventory</code><code class="purple_ieR2">}</code></div><div>
+<p>Every inventory a viewer of this container should be able to see.</p>
+<p>
+  For an <code>Inventory</code> container that is just its own. For an <code>ItemGroup</code> it is
+  its own plus the inventory nested inside each slot -- a pile of backpacks
+  shows the backpacks' contents, not the backpacks.
+</p>
+<p>
+  The old version did this walk inline in <code>OpenContainer</code>, and again in a
+  slot-change handler, and again in <code>CloseContainer</code> to undo it. Nesting is
+  tracked by holder id now, so it is one function with one caller per event.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Open"><code style="text-decoration:none">Open</code><a href="#Open" class="hash-link" aria-label="Direct link to Open" title="Direct link to Open" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L723"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Open</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">Inventory</code><code class="purple_ieR2">}</code><code class="blue_P4bS">?</code></div><div>
+<p>Open the container for a player.</p>
+<p>
+  Returns the inventories to expose, or nil when the open was refused --
+  disabled, locked, or out of range. Note what it does NOT do: attach anything
+  to the player. <code>OnContainerOpened</code> plus this return value is the whole
+  protocol, so the replication layer decides what reaches the client.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Close"><code style="text-decoration:none">Close</code><a href="#Close" class="hash-link" aria-label="Direct link to Close" title="Direct link to Close" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L757"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">Close</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">Inventory</code><code class="purple_ieR2">}</code></div><div>
+<p>Close the container for a player.</p>
+<p>
+  Safe to call for a player that never had it open -- the old version had to
+  run its listener cleanup in that case anyway, because a vanished client left
+  connections behind. There are no per-viewer connections now, so there is
+  nothing to leak.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsOpen"><code style="text-decoration:none">IsOpen</code><a href="#IsOpen" class="hash-link" aria-label="Direct link to IsOpen" title="Direct link to IsOpen" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L778"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">IsOpen</code><code>(</code><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Whether anyone has it open.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="CloseAll"><code style="text-decoration:none">CloseAll</code><a href="#CloseAll" class="hash-link" aria-label="Direct link to CloseAll" title="Direct link to CloseAll" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau#L787"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>ContainerService<!-- -->:</code><code class="green_DgR4">CloseAll</code><code>(</code><div class="inset_uKQm"><div><code>container<!-- -->: </code><code class="blue_P4bS">ContainerData</code><code>,</code></div><div><code>players<!-- -->: </code><code class="purple_ieR2">{</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code class="purple_ieR2">}</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Close for every viewer. Used when a container is disabled or destroyed.</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;Create&quot;,
+            &quot;desc&quot;: &quot;Create a container and the inventory behind it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerConfig?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CreateOptions?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 274,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Get&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 336,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetAll&quot;,
+            &quot;desc&quot;: &quot;Every live container. Copied out, so removal during iteration is safe.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ContainerData }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 345,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Remove&quot;,
+            &quot;desc&quot;: &quot;Tear a container down, handing back whatever it still held.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 358,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Clear&quot;,
+            &quot;desc&quot;: &quot;Drop every container. Used by tests and by a place teardown.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 371,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SetModified&quot;,
+            &quot;desc&quot;: &quot;Mark the container as needing a respawn.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 385,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ToggleEnabled&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;enabled&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 395,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;HasSearched&quot;,
+            &quot;desc&quot;: &quot;Whether a given player has searched this container since its last respawn.\n\nKeyed on UserId, matching the OwnerId every other service already uses.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 407,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetCFrame&quot;,
+            &quot;desc&quot;: &quot;The container&#x27;s current placement.\n\nA movable container (vehicle storage) reads its object&#x27;s pivot, because its\nstored CFrame went stale the moment it drove away.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CFrame\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 442,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsInRange&quot;,
+            &quot;desc&quot;: &quot;Whether `player` is close enough to interact.\n\nReads the character fresh, per the no-session-object convention.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 460,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Unlock&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 476,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;DamageLock&quot;,
+            &quot;desc&quot;: &quot;Damage the lock. Returns true only on the hit that breaks it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;damage&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 495,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;SpawnItems&quot;,
+            &quot;desc&quot;: &quot;Fill the container from its spawn data.\n\nReturns whether anything was placed. Delegates to `SpawnProvider`; see the\nheader for why.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 531,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;DespawnItems&quot;,
+            &quot;desc&quot;: &quot;Empty the container.\n\nReturns the stacks that were in it. The old version destroyed each spawned\nitem in place; a stack owns no identity, so dropping the reference is what\ndestruction means here -- and handing them back lets a caller relocate them\ninstead.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemStack }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 578,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Take&quot;,
+            &quot;desc&quot;: &quot;Move quantity out of one of the container&#x27;s slots into `destination`.\n\nReturns what actually moved. The old signature returned\n`(took_anything, remaining)` and recomputed the remainder from three\nseparate quantities at the call site; `TransferResult` carries both, named.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;destination&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 601,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TakeFor&quot;,
+            &quot;desc&quot;: &quot;`Take`, gated on range and on the container being open to that player.\n\nThe gate lives here because it is the authority check: a client asking to\ntake something is not trusted about where it is standing, nor about whether\nit ever opened the container.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;destination&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 637,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Deposit&quot;,
+            &quot;desc&quot;: &quot;Put quantity from `holder` into the container.\n\nThe mirror of `Take`, and the reason a drop pile works: a container is just\nan inventory, so depositing is the same transfer in the other direction.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 663,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CollectInventories&quot;,
+            &quot;desc&quot;: &quot;Every inventory a viewer of this container should be able to see.\n\nFor an `Inventory` container that is just its own. For an `ItemGroup` it is\nits own plus the inventory nested inside each slot -- a pile of backpacks\nshows the backpacks&#x27; contents, not the backpacks.\n\nThe old version did this walk inline in `OpenContainer`, and again in a\nslot-change handler, and again in `CloseContainer` to undo it. Nesting is\ntracked by holder id now, so it is one function with one caller per event.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ Inventory }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 696,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Open&quot;,
+            &quot;desc&quot;: &quot;Open the container for a player.\n\nReturns the inventories to expose, or nil when the open was refused --\ndisabled, locked, or out of range. Note what it does NOT do: attach anything\nto the player. `OnContainerOpened` plus this return value is the whole\nprotocol, so the replication layer decides what reaches the client.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ Inventory }?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 723,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Close&quot;,
+            &quot;desc&quot;: &quot;Close the container for a player.\n\nSafe to call for a player that never had it open -- the old version had to\nrun its listener cleanup in that case anyway, because a vanished client left\nconnections behind. There are no per-viewer connections now, so there is\nnothing to leak.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ Inventory }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 757,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsOpen&quot;,
+            &quot;desc&quot;: &quot;Whether anyone has it open.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 778,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CloseAll&quot;,
+            &quot;desc&quot;: &quot;Close for every viewer. Used when a container is disabled or destroyed.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;container&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ContainerData&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;players&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ Player }&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 787,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;ContainerService&quot;,
+    &quot;desc&quot;: &quot;World containers: crates, lockers, vehicle storage, loot piles.\n\nWHAT CHANGED\n\nA container&#x27;s contents were a bespoke `InventoryController` reached through\n`container.Inventory`, and opening one reached all the way into\n`client.Manager.AccessibleInventoryManager` to attach it -- so the service\nthat owns crates also owned a piece of the replication protocol, and could\nnot be exercised without a live client session.\n\nHere a container&#x27;s contents are an ordinary `Inventory` of kind `Container`,\nand `Open` RETURNS the inventories to expose rather than attaching them. Who\nreceives them is the replication layer&#x27;s business. That inversion is what\nlets open/close/search/lock be tested with no player, no network and no\nplace.\n\n`ItemGroup` containers -- the ones whose slots hold items that are themselves\ncontainers, like a pile of backpacks -- were the messiest part of that\ncoupling: opening one walked every slot, found each item&#x27;s nested\ninventories, and attached them individually with `Silent` metadata, then\nre-ran the same walk on every slot change. `InventoryService` already tracks\nnesting by holder id, so that walk is `CollectInventories` and the change\nhandling is one signal.\n\nWHAT IS DELEGATED\n\nLoot spawning still belongs to `ItemSpawnDataService`, which is not ported.\n`SpawnProvider` is the seam it will plug into; until then `SpawnItems`\nreports that it spawned nothing, which is exactly what an unconfigured\ncontainer should do. Sounds and attribute writes live in the binding.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 37,
+        &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/ContainerService.service.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Clear" class="table-of-contents__link toc-highlight">:Clear</a></li><li><a href="#Close" class="table-of-contents__link toc-highlight">:Close</a></li><li><a href="#CloseAll" class="table-of-contents__link toc-highlight">:CloseAll</a></li><li><a href="#CollectInventories" class="table-of-contents__link toc-highlight">:CollectInventories</a></li><li><a href="#Create" class="table-of-contents__link toc-highlight">:Create</a></li><li><a href="#DamageLock" class="table-of-contents__link toc-highlight">:DamageLock</a></li><li><a href="#Deposit" class="table-of-contents__link toc-highlight">:Deposit</a></li><li><a href="#DespawnItems" class="table-of-contents__link toc-highlight">:DespawnItems</a></li><li><a href="#Get" class="table-of-contents__link toc-highlight">:Get</a></li><li><a href="#GetAll" class="table-of-contents__link toc-highlight">:GetAll</a></li><li><a href="#GetCFrame" class="table-of-contents__link toc-highlight">:GetCFrame</a></li><li><a href="#HasSearched" class="table-of-contents__link toc-highlight">:HasSearched</a></li><li><a href="#IsInRange" class="table-of-contents__link toc-highlight">:IsInRange</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">:IsOpen</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">:Open</a></li><li><a href="#Remove" class="table-of-contents__link toc-highlight">:Remove</a></li><li><a href="#SetModified" class="table-of-contents__link toc-highlight">:SetModified</a></li><li><a href="#SpawnItems" class="table-of-contents__link toc-highlight">:SpawnItems</a></li><li><a href="#Take" class="table-of-contents__link toc-highlight">:Take</a></li><li><a href="#TakeFor" class="table-of-contents__link toc-highlight">:TakeFor</a></li><li><a href="#ToggleEnabled" class="table-of-contents__link toc-highlight">:ToggleEnabled</a></li><li><a href="#Unlock" class="table-of-contents__link toc-highlight">:Unlock</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">GroundItemService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/GroundItemService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="GroundItemService | Aftermath"><meta data-rh="true" name="description" content="World piles, as holders.
+
+WHAT CHANGED
+
+The old service ran a parallel item lifecycle beside the inventory one. A
+ground spawn owned an `Item` object, subscribed to its `OnUpdate` signal, and
+mirrored quantity and durability onto a part attribute from inside that
+callback. Dropping had three branches -- merge into a nearby pile, clone the
+item for a partial drop, or move the whole object and clear the slot it came
+from -- and each branch had to decide for itself whether the source slot was
+now empty.
+
+A ground pile is already an `ItemHolder` with `Unlimited` capacity, so all
+three branches are one `Transfer`. Conservation is the transfer&#x27;s job:
+whatever does not fit stays in the source holder, because the source holder
+still exists. Nothing is cloned, nothing is destroyed to make an arithmetic
+result come out, and no slot has to be cleared as a side effect -- an emptied
+holder is simply an empty holder.
+
+What is left here is the part the model does not cover: where a pile sits in
+the world, which cell it hashes to, and which part instance represents it.
+
+TESTABILITY
+
+`World` and `Schedule` are injectable seams, the same pattern
+`ItemContextService` uses for `Schedule` and `HasPermission`. Both default to
+doing nothing, so every function below runs headless -- no `workspace`, no
+part pool, no raycast. The Roblox-side implementation is installed at boot by
+`GroundItemBinding`, which is the only piece that needs a running place.
+
+NO SESSION OBJECT
+
+Range checks take a `Player` and resolve the character through
+`CharacterUtil`, which goes to CustomCharacter&#x27;s PlayerList -- `Player.Character`
+is NOT the authority in this game. Read fresh rather than cached, unlike the
+`client.PrimaryPart` it replaces, which went stale across a respawn.
+See the convention note in `src2/PORT.md`."><meta data-rh="true" property="og:description" content="World piles, as holders.
+
+WHAT CHANGED
+
+The old service ran a parallel item lifecycle beside the inventory one. A
+ground spawn owned an `Item` object, subscribed to its `OnUpdate` signal, and
+mirrored quantity and durability onto a part attribute from inside that
+callback. Dropping had three branches -- merge into a nearby pile, clone the
+item for a partial drop, or move the whole object and clear the slot it came
+from -- and each branch had to decide for itself whether the source slot was
+now empty.
+
+A ground pile is already an `ItemHolder` with `Unlimited` capacity, so all
+three branches are one `Transfer`. Conservation is the transfer&#x27;s job:
+whatever does not fit stays in the source holder, because the source holder
+still exists. Nothing is cloned, nothing is destroyed to make an arithmetic
+result come out, and no slot has to be cleared as a side effect -- an emptied
+holder is simply an empty holder.
+
+What is left here is the part the model does not cover: where a pile sits in
+the world, which cell it hashes to, and which part instance represents it.
+
+TESTABILITY
+
+`World` and `Schedule` are injectable seams, the same pattern
+`ItemContextService` uses for `Schedule` and `HasPermission`. Both default to
+doing nothing, so every function below runs headless -- no `workspace`, no
+part pool, no raycast. The Roblox-side implementation is installed at boot by
+`GroundItemBinding`, which is the only piece that needs a running place.
+
+NO SESSION OBJECT
+
+Range checks take a `Player` and resolve the character through
+`CharacterUtil`, which goes to CustomCharacter&#x27;s PlayerList -- `Player.Character`
+is NOT the authority in this game. Read fresh rather than cached, unlike the
+`client.PrimaryPart` it replaces, which went stale across a respawn.
+See the convention note in `src2/PORT.md`."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/GroundItemService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/GroundItemService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/GroundItemService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Ground</span><span style="display:inline-block">Item</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>World piles, as holders.</p>
+<p>WHAT CHANGED</p>
+<p>
+  The old service ran a parallel item lifecycle beside the inventory one. A
+  ground spawn owned an <code>Item</code> object, subscribed to its <code>OnUpdate</code> signal, and
+  mirrored quantity and durability onto a part attribute from inside that
+  callback. Dropping had three branches -- merge into a nearby pile, clone the
+  item for a partial drop, or move the whole object and clear the slot it came
+  from -- and each branch had to decide for itself whether the source slot was
+  now empty.
+</p>
+<p>
+  A ground pile is already an <code>ItemHolder</code> with <code>Unlimited</code> capacity, so all
+  three branches are one <code>Transfer</code>. Conservation is the transfer's job:
+  whatever does not fit stays in the source holder, because the source holder
+  still exists. Nothing is cloned, nothing is destroyed to make an arithmetic
+  result come out, and no slot has to be cleared as a side effect -- an emptied
+  holder is simply an empty holder.
+</p>
+<p>
+  What is left here is the part the model does not cover: where a pile sits in
+  the world, which cell it hashes to, and which part instance represents it.
+</p>
+<p>TESTABILITY</p>
+<p>
+  <code>World</code> and <code>Schedule</code> are injectable seams, the same pattern
+  <code>ItemContextService</code> uses for <code>Schedule</code> and <code>HasPermission</code>. Both default to
+  doing nothing, so every function below runs headless -- no <code>workspace</code>, no
+  part pool, no raycast. The Roblox-side implementation is installed at boot by
+  <code>GroundItemBinding</code>, which is the only piece that needs a running place.
+</p>
+<p>NO SESSION OBJECT</p>
+<p>
+  Range checks take a <code>Player</code> and resolve the character through
+  <code>CharacterUtil</code>, which goes to CustomCharacter's PlayerList -- <code>Player.Character</code>
+  is NOT the authority in this game. Read fresh rather than cached, unlike the
+  <code>client.PrimaryPart</code> it replaces, which went stale across a respawn.
+  See the convention note in <code>src2/PORT.md</code>.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Get"><code style="text-decoration:none">Get</code><a href="#Get" class="hash-link" aria-label="Direct link to Get" title="Direct link to Get" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L265"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Get</code><code>(</code><code>id<!-- -->: </code><code class="blue_P4bS">string</code><code>) → </code><code class="blue_P4bS">GroundSpawn?</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetSpawnsInCell"><code style="text-decoration:none">GetSpawnsInCell</code><a href="#GetSpawnsInCell" class="hash-link" aria-label="Direct link to GetSpawnsInCell" title="Direct link to GetSpawnsInCell" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L277"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">GetSpawnsInCell</code><code>(</code><code>position<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">GroundSpawn</code><code class="purple_ieR2">}</code></div><div>
+<p>Every pile in the cell containing <code>position</code>.</p>
+<p>
+  Returns the live bucket's contents copied out, so a caller may remove piles
+  while iterating.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetSpawnsInRadius"><code style="text-decoration:none">GetSpawnsInRadius</code><a href="#GetSpawnsInRadius" class="hash-link" aria-label="Direct link to GetSpawnsInRadius" title="Direct link to GetSpawnsInRadius" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L290"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">GetSpawnsInRadius</code><code>(</code><div class="inset_uKQm"><div><code>position<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>radius<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">GroundSpawn</code><code class="purple_ieR2">}</code></div><div>
+<p>Every pile within <code>radius</code> studs of <code>position</code>.</p>
+<p>
+  Walks the cells the sphere touches rather than every pile in the world. At
+  the default interaction radius that is a handful of buckets.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="FindMergeable"><code style="text-decoration:none">FindMergeable</code><a href="#FindMergeable" class="hash-link" aria-label="Direct link to FindMergeable" title="Direct link to FindMergeable" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L329"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">FindMergeable</code><code>(</code><div class="inset_uKQm"><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code><code>,</code></div><div><code>position<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/Vector3" target="_blank" rel="noopener noreferrer">Vector3<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="blue_P4bS">GroundSpawn?</code></div><div>
+<p>A pile in the same cell that <code>stack</code> could merge into.</p>
+<p>
+  Merge eligibility is <code>HolderService:AreMergeable</code>, which compares durability
+  and skin as well as class. The old service compared <code>ClassName</code> alone and
+  additionally refused to merge anything whose <code>MaxQuantity</code> was 1, so a
+  damaged rifle could absorb a pristine one. This is stricter, and it is the
+  rule the rest of the model already uses -- see the merge-strictness open
+  question in <code>src2/PORT.md</code>.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsInRange"><code style="text-decoration:none">IsInRange</code><a href="#IsInRange" class="hash-link" aria-label="Direct link to IsInRange" title="Direct link to IsInRange" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L352"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">IsInRange</code><code>(</code><div class="inset_uKQm"><div><code>spawn<!-- -->: </code><code class="blue_P4bS">GroundSpawn</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>Whether <code>player</code> is close enough to interact with <code>spawn</code>.</p>
+<p>Reads the character fresh; a cached position went stale across a respawn.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Place"><code style="text-decoration:none">Place</code><a href="#Place" class="hash-link" aria-label="Direct link to Place" title="Direct link to Place" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L371"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Place</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>cframe<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/CFrame" target="_blank" rel="noopener noreferrer">CFrame<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">DropOptions?</code></div></div><code>) → </code><code class="blue_P4bS">GroundSpawn?</code></div><div>
+<p>Put an existing ground holder into the world at <code>cframe</code>.</p>
+<p>
+  The holder must already hold a stack. Use this when something has produced a
+  pile and needs it placed -- <code>InventoryService:Drop</code> returns exactly that.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="PlaceStack"><code style="text-decoration:none">PlaceStack</code><a href="#PlaceStack" class="hash-link" aria-label="Direct link to PlaceStack" title="Direct link to PlaceStack" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L468"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">PlaceStack</code><code>(</code><div class="inset_uKQm"><div><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack</code><code>,</code></div><div><code>cframe<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/CFrame" target="_blank" rel="noopener noreferrer">CFrame<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">DropOptions?</code></div></div><code>) → </code><code class="blue_P4bS">GroundSpawn?</code></div><div>
+<p>Place a loose stack, with no source holder.</p>
+<p>
+  This is how a spawner, a loot table or an NPC death drop puts something on
+  the ground: there is no holder it is coming out of, so one is created for it.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Drop"><code style="text-decoration:none">Drop</code><a href="#Drop" class="hash-link" aria-label="Direct link to Drop" title="Direct link to Drop" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L493"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Drop</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>cframe<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/datatype/CFrame" target="_blank" rel="noopener noreferrer">CFrame<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>options<!-- -->: </code><code class="blue_P4bS">DropOptions?</code></div></div><code>) → </code><code class="blue_P4bS">GroundSpawn?</code></div><div>
+<p>Drop <code>quantity</code> out of <code>holder</code> onto the ground.</p>
+<p>
+  <code>holder</code> is wherever the quantity is coming from -- an inventory slot, an
+  equipment slot, another pile. It is NOT emptied unless the whole stack moves,
+  and it is never cleared as a side effect: an emptied slot is just an empty
+  slot, and the caller does not have to know which of those happened.
+</p>
+<p>
+  Returns the pile the quantity landed in, which may be one that already
+  existed.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Take"><code style="text-decoration:none">Take</code><a href="#Take" class="hash-link" aria-label="Direct link to Take" title="Direct link to Take" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L543"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Take</code><code>(</code><div class="inset_uKQm"><div><code>spawn<!-- -->: </code><code class="blue_P4bS">GroundSpawn</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Move quantity from a pile into an inventory.</p>
+<p>
+  Returns what actually moved. A pile that empties is removed; one that does
+  not is left exactly as it is, holding the remainder -- which is the case the
+  old model could not express, because the thing holding the excess was the
+  item being taken.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TakeFor"><code style="text-decoration:none">TakeFor</code><a href="#TakeFor" class="hash-link" aria-label="Direct link to TakeFor" title="Direct link to TakeFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L574"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">TakeFor</code><code>(</code><div class="inset_uKQm"><div><code>spawn<!-- -->: </code><code class="blue_P4bS">GroundSpawn</code><code>,</code></div><div><code>player<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/Player" target="_blank" rel="noopener noreferrer">Player<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p><code>Take</code>, gated on the player being close enough.</p>
+<p>
+  The range check lives here rather than at the call site because it is the
+  authority check: a client asking to pick something up is not trusted about
+  where it is standing.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Remove"><code style="text-decoration:none">Remove</code><a href="#Remove" class="hash-link" aria-label="Direct link to Remove" title="Direct link to Remove" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L599"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Remove</code><code>(</code><code>spawn<!-- -->: </code><code class="blue_P4bS">GroundSpawn</code><code>) → </code><code class="blue_P4bS">ItemHolder</code></div><div>
+<p>Take a pile out of the world.</p>
+<p>
+  The stack it holds is NOT destroyed -- the holder is handed back, so a caller
+  that is moving a pile somewhere else keeps what was in it. Piles that expire
+  or are cleared simply drop the reference, which is what destruction means for
+  data that owns no identity.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RemoveBySpawner"><code style="text-decoration:none">RemoveBySpawner</code><a href="#RemoveBySpawner" class="hash-link" aria-label="Direct link to RemoveBySpawner" title="Direct link to RemoveBySpawner" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L632"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">RemoveBySpawner</code><code>(</code><code>spawner_id<!-- -->: </code><code class="blue_P4bS">string</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div>
+<p>Remove every pile a given spawner owns, returning what they held.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GetAll"><code style="text-decoration:none">GetAll</code><a href="#GetAll" class="hash-link" aria-label="Direct link to GetAll" title="Direct link to GetAll" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L649"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">GetAll</code><code>(</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">GroundSpawn</code><code class="purple_ieR2">}</code></div><div>
+<p>Every live pile. Copied out, so removal during iteration is safe.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Clear"><code style="text-decoration:none">Clear</code><a href="#Clear" class="hash-link" aria-label="Direct link to Clear" title="Direct link to Clear" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau#L662"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>GroundItemService<!-- -->:</code><code class="green_DgR4">Clear</code><code>(</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Drop every pile. Used by tests and by a place teardown.</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;Get&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 265,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetSpawnsInCell&quot;,
+            &quot;desc&quot;: &quot;Every pile in the cell containing `position`.\n\nReturns the live bucket&#x27;s contents copied out, so a caller may remove piles\nwhile iterating.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;position&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Vector3&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ GroundSpawn }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 277,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetSpawnsInRadius&quot;,
+            &quot;desc&quot;: &quot;Every pile within `radius` studs of `position`.\n\nWalks the cells the sphere touches rather than every pile in the world. At\nthe default interaction radius that is a handful of buckets.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;position&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Vector3&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;radius&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ GroundSpawn }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 290,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;FindMergeable&quot;,
+            &quot;desc&quot;: &quot;A pile in the same cell that `stack` could merge into.\n\nMerge eligibility is `HolderService:AreMergeable`, which compares durability\nand skin as well as class. The old service compared `ClassName` alone and\nadditionally refused to merge anything whose `MaxQuantity` was 1, so a\ndamaged rifle could absorb a pristine one. This is stricter, and it is the\nrule the rest of the model already uses -- see the merge-strictness open\nquestion in `src2/PORT.md`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;position&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Vector3&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 329,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsInRange&quot;,
+            &quot;desc&quot;: &quot;Whether `player` is close enough to interact with `spawn`.\n\nReads the character fresh; a cached position went stale across a respawn.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawn&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 352,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Place&quot;,
+            &quot;desc&quot;: &quot;Put an existing ground holder into the world at `cframe`.\n\nThe holder must already hold a stack. Use this when something has produced a\npile and needs it placed -- `InventoryService:Drop` returns exactly that.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;cframe&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CFrame&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;DropOptions?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 371,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;PlaceStack&quot;,
+            &quot;desc&quot;: &quot;Place a loose stack, with no source holder.\n\nThis is how a spawner, a loot table or an NPC death drop puts something on\nthe ground: there is no holder it is coming out of, so one is created for it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;cframe&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CFrame&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;DropOptions?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 468,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Drop&quot;,
+            &quot;desc&quot;: &quot;Drop `quantity` out of `holder` onto the ground.\n\n`holder` is wherever the quantity is coming from -- an inventory slot, an\nequipment slot, another pile. It is NOT emptied unless the whole stack moves,\nand it is never cleared as a side effect: an emptied slot is just an empty\nslot, and the caller does not have to know which of those happened.\n\nReturns the pile the quantity landed in, which may be one that already\nexisted.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;cframe&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;CFrame&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;options&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;DropOptions?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 493,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Take&quot;,
+            &quot;desc&quot;: &quot;Move quantity from a pile into an inventory.\n\nReturns what actually moved. A pile that empties is removed; one that does\nnot is left exactly as it is, holding the remainder -- which is the case the\nold model could not express, because the thing holding the excess was the\nitem being taken.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawn&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 543,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TakeFor&quot;,
+            &quot;desc&quot;: &quot;`Take`, gated on the player being close enough.\n\nThe range check lives here rather than at the call site because it is the\nauthority check: a client asking to pick something up is not trusted about\nwhere it is standing.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawn&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;player&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Player&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 574,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Remove&quot;,
+            &quot;desc&quot;: &quot;Take a pile out of the world.\n\nThe stack it holds is NOT destroyed -- the holder is handed back, so a caller\nthat is moving a pile somewhere else keeps what was in it. Piles that expire\nor are cleared simply drop the reference, which is what destruction means for\ndata that owns no identity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawn&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;GroundSpawn&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 599,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RemoveBySpawner&quot;,
+            &quot;desc&quot;: &quot;Remove every pile a given spawner owns, returning what they held.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;spawner_id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 632,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetAll&quot;,
+            &quot;desc&quot;: &quot;Every live pile. Copied out, so removal during iteration is safe.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ GroundSpawn }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 649,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Clear&quot;,
+            &quot;desc&quot;: &quot;Drop every pile. Used by tests and by a place teardown.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 662,
+                &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;GroundItemService&quot;,
+    &quot;desc&quot;: &quot;World piles, as holders.\n\nWHAT CHANGED\n\nThe old service ran a parallel item lifecycle beside the inventory one. A\nground spawn owned an `Item` object, subscribed to its `OnUpdate` signal, and\nmirrored quantity and durability onto a part attribute from inside that\ncallback. Dropping had three branches -- merge into a nearby pile, clone the\nitem for a partial drop, or move the whole object and clear the slot it came\nfrom -- and each branch had to decide for itself whether the source slot was\nnow empty.\n\nA ground pile is already an `ItemHolder` with `Unlimited` capacity, so all\nthree branches are one `Transfer`. Conservation is the transfer&#x27;s job:\nwhatever does not fit stays in the source holder, because the source holder\nstill exists. Nothing is cloned, nothing is destroyed to make an arithmetic\nresult come out, and no slot has to be cleared as a side effect -- an emptied\nholder is simply an empty holder.\n\nWhat is left here is the part the model does not cover: where a pile sits in\nthe world, which cell it hashes to, and which part instance represents it.\n\nTESTABILITY\n\n`World` and `Schedule` are injectable seams, the same pattern\n`ItemContextService` uses for `Schedule` and `HasPermission`. Both default to\ndoing nothing, so every function below runs headless -- no `workspace`, no\npart pool, no raycast. The Roblox-side implementation is installed at boot by\n`GroundItemBinding`, which is the only piece that needs a running place.\n\nNO SESSION OBJECT\n\nRange checks take a `Player` and resolve the character through\n`CharacterUtil`, which goes to CustomCharacter&#x27;s PlayerList -- `Player.Character`\nis NOT the authority in this game. Read fresh rather than cached, unlike the\n`client.PrimaryPart` it replaces, which went stale across a respawn.\nSee the convention note in `src2/PORT.md`.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 44,
+        &quot;path&quot;: &quot;src2/server/EmberServerLibrary/GameServer/Services/GroundItemService.service.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Clear" class="table-of-contents__link toc-highlight">:Clear</a></li><li><a href="#Drop" class="table-of-contents__link toc-highlight">:Drop</a></li><li><a href="#FindMergeable" class="table-of-contents__link toc-highlight">:FindMergeable</a></li><li><a href="#Get" class="table-of-contents__link toc-highlight">:Get</a></li><li><a href="#GetAll" class="table-of-contents__link toc-highlight">:GetAll</a></li><li><a href="#GetSpawnsInCell" class="table-of-contents__link toc-highlight">:GetSpawnsInCell</a></li><li><a href="#GetSpawnsInRadius" class="table-of-contents__link toc-highlight">:GetSpawnsInRadius</a></li><li><a href="#IsInRange" class="table-of-contents__link toc-highlight">:IsInRange</a></li><li><a href="#Place" class="table-of-contents__link toc-highlight">:Place</a></li><li><a href="#PlaceStack" class="table-of-contents__link toc-highlight">:PlaceStack</a></li><li><a href="#Remove" class="table-of-contents__link toc-highlight">:Remove</a></li><li><a href="#RemoveBySpawner" class="table-of-contents__link toc-highlight">:RemoveBySpawner</a></li><li><a href="#Take" class="table-of-contents__link toc-highlight">:Take</a></li><li><a href="#TakeFor" class="table-of-contents__link toc-highlight">:TakeFor</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

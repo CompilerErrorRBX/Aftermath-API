@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">TransactionService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/TransactionService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="TransactionService | Aftermath"><meta data-rh="true" name="description" content="Staged inventory changes: build up a set of moves, then commit them all or
+throw them all away. Entirely optional -- the direct HolderService /
+InventoryService calls still work and are unchanged.
+
+WHY
+
+Multi-step operations today mutate as they go, so a failure halfway leaves
+the inventory in a state no caller asked for: a craft that consumes three
+ingredients and cannot place the output has already eaten the ingredients,
+and a trade that moves five stacks and stalls on the sixth has moved five.
+
+HOW
+
+A transaction keeps a copy-on-write SHADOW of every holder it touches.
+Staged operations read and write the shadow, never the real holders, so
+nothing is visible until Commit. Drop discards the shadow and the world is
+untouched -- there is no rollback step to get wrong, because nothing moved.
+
+VALIDITY
+
+Each staged operation is validated against the PROJECTED state, not the
+current one. Stage two 100-round adds into a single 100-round slot and the
+second fails immediately, because by then the projection already shows the
+slot full. So the projected state is valid at every step, and committing it
+cannot produce a state the rules would have rejected.
+
+CONCURRENCY
+
+The baseline quantity of every touched holder is recorded when it is first
+shadowed. Commit re-checks it: if anything moved underneath the transaction
+-- another commit, a direct call, a pickup on another thread -- the commit
+is refused rather than clobbering the newer value."><meta data-rh="true" property="og:description" content="Staged inventory changes: build up a set of moves, then commit them all or
+throw them all away. Entirely optional -- the direct HolderService /
+InventoryService calls still work and are unchanged.
+
+WHY
+
+Multi-step operations today mutate as they go, so a failure halfway leaves
+the inventory in a state no caller asked for: a craft that consumes three
+ingredients and cannot place the output has already eaten the ingredients,
+and a trade that moves five stacks and stalls on the sixth has moved five.
+
+HOW
+
+A transaction keeps a copy-on-write SHADOW of every holder it touches.
+Staged operations read and write the shadow, never the real holders, so
+nothing is visible until Commit. Drop discards the shadow and the world is
+untouched -- there is no rollback step to get wrong, because nothing moved.
+
+VALIDITY
+
+Each staged operation is validated against the PROJECTED state, not the
+current one. Stage two 100-round adds into a single 100-round slot and the
+second fails immediately, because by then the projection already shows the
+slot full. So the projected state is valid at every step, and committing it
+cannot produce a state the rules would have rejected.
+
+CONCURRENCY
+
+The baseline quantity of every touched holder is recorded when it is first
+shadowed. Commit re-checks it: if anything moved underneath the transaction
+-- another commit, a direct call, a pickup on another thread -- the commit
+is refused rather than clobbering the newer value."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/TransactionService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/TransactionService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/TransactionService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/HolderService"><span title="​Holder​Service" class="linkLabel_WmDU">​Holder​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/InventoryService"><span title="​Inventory​Service" class="linkLabel_WmDU">​Inventory​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/InventoryManager"><span title="​Inventory​Manager" class="linkLabel_WmDU">​Inventory​Manager</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/EquipmentService"><span title="​Equipment​Service" class="linkLabel_WmDU">​Equipment​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/SlotPriority"><span title="​Slot​Priority" class="linkLabel_WmDU">​Slot​Priority</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/Aftermath-API/api/TransactionService"><span title="​Transaction​Service" class="linkLabel_WmDU">​Transaction​Service</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Transaction</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>
+  Staged inventory changes: build up a set of moves, then commit them all or
+  throw them all away. Entirely optional -- the direct HolderService /
+  InventoryService calls still work and are unchanged.
+</p>
+<p>WHY</p>
+<p>
+  Multi-step operations today mutate as they go, so a failure halfway leaves
+  the inventory in a state no caller asked for: a craft that consumes three
+  ingredients and cannot place the output has already eaten the ingredients,
+  and a trade that moves five stacks and stalls on the sixth has moved five.
+</p>
+<p>HOW</p>
+<p>
+  A transaction keeps a copy-on-write SHADOW of every holder it touches.
+  Staged operations read and write the shadow, never the real holders, so
+  nothing is visible until Commit. Drop discards the shadow and the world is
+  untouched -- there is no rollback step to get wrong, because nothing moved.
+</p>
+<p>VALIDITY</p>
+<p>
+  Each staged operation is validated against the PROJECTED state, not the
+  current one. Stage two 100-round adds into a single 100-round slot and the
+  second fails immediately, because by then the projection already shows the
+  slot full. So the projected state is valid at every step, and committing it
+  cannot produce a state the rules would have rejected.
+</p>
+<p>CONCURRENCY</p>
+<p>
+  The baseline quantity of every touched holder is recorded when it is first
+  shadowed. Commit re-checks it: if anything moved underneath the transaction
+  -- another commit, a direct call, a pickup on another thread -- the commit
+  is refused rather than clobbering the newer value.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Peek"><code style="text-decoration:none">Peek</code><a href="#Peek" class="hash-link" aria-label="Direct link to Peek" title="Direct link to Peek" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L125"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">Peek</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div>
+<p>Projected stack for a holder: shadowed if touched, live otherwise.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ProjectedWeight"><code style="text-decoration:none">ProjectedWeight</code><a href="#ProjectedWeight" class="hash-link" aria-label="Direct link to ProjectedWeight" title="Direct link to ProjectedWeight" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L151"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">ProjectedWeight</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Begin"><code style="text-decoration:none">Begin</code><a href="#Begin" class="hash-link" aria-label="Direct link to Begin" title="Direct link to Begin" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L212"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">Begin</code><code>(</code><code>) → </code><code class="blue_P4bS">Transaction</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Commit"><code style="text-decoration:none">Commit</code><a href="#Commit" class="hash-link" aria-label="Direct link to Commit" title="Direct link to Commit" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L233"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">Commit</code><code>(</code><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>) → </code><code>(</code><div class="inset_uKQm"><div><code class="blue_P4bS">boolean</code><code>,</code></div><div><code class="blue_P4bS">string?</code></div></div><code>)</code></div><div>
+<p>Applies every shadow at once.</p>
+<p>
+  Refuses when the transaction is invalid, already resolved, or when a touched
+  holder changed underneath it. Returns false without applying anything --
+  partial application is exactly what this exists to prevent.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Drop"><code style="text-decoration:none">Drop</code><a href="#Drop" class="hash-link" aria-label="Direct link to Drop" title="Direct link to Drop" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L266"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">Drop</code><code>(</code><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  Discards the transaction. Nothing was ever applied, so there is nothing to
+  undo -- this only releases the shadow.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Transfer"><code style="text-decoration:none">Transfer</code><a href="#Transfer" class="hash-link" aria-label="Direct link to Transfer" title="Direct link to Transfer" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L293"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">Transfer</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>from<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>to<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>group<!-- -->: </code><code class="blue_P4bS">Inventory?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Stage a move between two holders.</p>
+<p>
+  Same conservation rule as HolderService.Transfer, applied to the shadow: the
+  remainder stays in the source's projected stack. Marks the transaction
+  invalid if it could not move everything asked for, so a caller that needs
+  all-or-nothing simply checks <code>tx.Valid</code> before committing.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AddToInventory"><code style="text-decoration:none">AddToInventory</code><a href="#AddToInventory" class="hash-link" aria-label="Direct link to AddToInventory" title="Direct link to AddToInventory" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L379"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">AddToInventory</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>from<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Stage a move into the first holders of an inventory that will take it.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="RemoveFromInventory"><code style="text-decoration:none">RemoveFromInventory</code><a href="#RemoveFromInventory" class="hash-link" aria-label="Direct link to RemoveFromInventory" title="Direct link to RemoveFromInventory" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L437"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">RemoveFromInventory</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>Stage removal of <code>quantity</code> of an item from an inventory.</p>
+<p>
+  Fails the transaction if the inventory does not hold enough, so a craft
+  stages its ingredient costs and finds out before anything is consumed.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="ProjectedCount"><code style="text-decoration:none">ProjectedCount</code><a href="#ProjectedCount" class="hash-link" aria-label="Direct link to ProjectedCount" title="Direct link to ProjectedCount" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L485"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">ProjectedCount</code><code>(</code><div class="inset_uKQm"><div><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>,</code></div><div><code>inventory<!-- -->: </code><code class="blue_P4bS">Inventory</code><code>,</code></div><div><code>class_name<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>Projected quantity of an item across an inventory, including nesting.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TouchedHolders"><code style="text-decoration:none">TouchedHolders</code><a href="#TouchedHolders" class="hash-link" aria-label="Direct link to TouchedHolders" title="Direct link to TouchedHolders" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau#L505"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>TransactionService<!-- -->:</code><code class="green_DgR4">TouchedHolders</code><code>(</code><code>tx<!-- -->: </code><code class="blue_P4bS">Transaction</code><code>) → </code><code class="purple_ieR2">{</code><code class="blue_P4bS">ItemHolder</code><code class="purple_ieR2">}</code></div><div></div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;Peek&quot;,
+            &quot;desc&quot;: &quot;Projected stack for a holder: shadowed if touched, live otherwise.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 125,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ProjectedWeight&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 151,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Begin&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 212,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Commit&quot;,
+            &quot;desc&quot;: &quot;Applies every shadow at once.\n\nRefuses when the transaction is invalid, already resolved, or when a touched\nholder changed underneath it. Returns false without applying anything --\npartial application is exactly what this exists to prevent.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                },
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string?&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 233,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Drop&quot;,
+            &quot;desc&quot;: &quot;Discards the transaction. Nothing was ever applied, so there is nothing to\nundo -- this only releases the shadow.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 266,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Transfer&quot;,
+            &quot;desc&quot;: &quot;Stage a move between two holders.\n\nSame conservation rule as HolderService.Transfer, applied to the shadow: the\nremainder stays in the source&#x27;s projected stack. Marks the transaction\ninvalid if it could not move everything asked for, so a caller that needs\nall-or-nothing simply checks `tx.Valid` before committing.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;to&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;group&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 293,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AddToInventory&quot;,
+            &quot;desc&quot;: &quot;Stage a move into the first holders of an inventory that will take it.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 379,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;RemoveFromInventory&quot;,
+            &quot;desc&quot;: &quot;Stage removal of `quantity` of an item from an inventory.\n\nFails the transaction if the inventory does not hold enough, so a craft\nstages its ingredient costs and finds out before anything is consumed.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 437,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;ProjectedCount&quot;,
+            &quot;desc&quot;: &quot;Projected quantity of an item across an inventory, including nesting.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;inventory&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Inventory&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;class_name&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 485,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TouchedHolders&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;tx&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transaction&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{ ItemHolder }\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 505,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;TransactionService&quot;,
+    &quot;desc&quot;: &quot;Staged inventory changes: build up a set of moves, then commit them all or\nthrow them all away. Entirely optional -- the direct HolderService /\nInventoryService calls still work and are unchanged.\n\nWHY\n\nMulti-step operations today mutate as they go, so a failure halfway leaves\nthe inventory in a state no caller asked for: a craft that consumes three\ningredients and cannot place the output has already eaten the ingredients,\nand a trade that moves five stacks and stalls on the sixth has moved five.\n\nHOW\n\nA transaction keeps a copy-on-write SHADOW of every holder it touches.\nStaged operations read and write the shadow, never the real holders, so\nnothing is visible until Commit. Drop discards the shadow and the world is\nuntouched -- there is no rollback step to get wrong, because nothing moved.\n\nVALIDITY\n\nEach staged operation is validated against the PROJECTED state, not the\ncurrent one. Stage two 100-round adds into a single 100-round slot and the\nsecond fails immediately, because by then the projection already shows the\nslot full. So the projected state is valid at every step, and committing it\ncannot produce a state the rules would have rejected.\n\nCONCURRENCY\n\nThe baseline quantity of every touched holder is recorded when it is first\nshadowed. Commit re-checks it: if anything moved underneath the transaction\n-- another commit, a direct call, a pickup on another thread -- the commit\nis refused rather than clobbering the newer value.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 39,
+        &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/TransactionService.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#AddToInventory" class="table-of-contents__link toc-highlight">:AddToInventory</a></li><li><a href="#Begin" class="table-of-contents__link toc-highlight">:Begin</a></li><li><a href="#Commit" class="table-of-contents__link toc-highlight">:Commit</a></li><li><a href="#Drop" class="table-of-contents__link toc-highlight">:Drop</a></li><li><a href="#Peek" class="table-of-contents__link toc-highlight">:Peek</a></li><li><a href="#ProjectedCount" class="table-of-contents__link toc-highlight">:ProjectedCount</a></li><li><a href="#ProjectedWeight" class="table-of-contents__link toc-highlight">:ProjectedWeight</a></li><li><a href="#RemoveFromInventory" class="table-of-contents__link toc-highlight">:RemoveFromInventory</a></li><li><a href="#TouchedHolders" class="table-of-contents__link toc-highlight">:TouchedHolders</a></li><li><a href="#Transfer" class="table-of-contents__link toc-highlight">:Transfer</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>

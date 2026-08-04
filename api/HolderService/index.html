@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.10.1">
+<title data-rh="true">HolderService | Aftermath</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://CompilerErrorRBX.github.io/Aftermath-API/api/HolderService"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="HolderService | Aftermath"><meta data-rh="true" name="description" content="Operations over ItemHolders.
+
+Every mutating function here is CONSERVATIVE: the total quantity across all
+holders involved is identical before and after. Nothing is destroyed as a
+consequence of arithmetic. A holder that reaches zero becomes empty and
+stays a holder -- removing a ground pile from the world is a separate,
+explicit decision, not a side effect of the last item being taken.
+
+Contrast the current path, where BaseItem:SetQuantity clamps to the stack
+limit, discards the difference, and calls self:Destroy() at zero."><meta data-rh="true" property="og:description" content="Operations over ItemHolders.
+
+Every mutating function here is CONSERVATIVE: the total quantity across all
+holders involved is identical before and after. Nothing is destroyed as a
+consequence of arithmetic. A holder that reaches zero becomes empty and
+stays a holder -- removing a ground pile from the world is a separate,
+explicit decision, not a side effect of the last item being taken.
+
+Contrast the current path, where BaseItem:SetQuantity clamps to the stack
+limit, discards the difference, and calls self:Destroy() at zero."><link data-rh="true" rel="canonical" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/HolderService"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/HolderService" hreflang="en"><link data-rh="true" rel="alternate" href="https://CompilerErrorRBX.github.io/Aftermath-API/api/HolderService" hreflang="x-default"><link rel="stylesheet" href="/Aftermath-API/assets/css/styles.5ec48d9a.css">
+<script src="/Aftermath-API/assets/js/runtime~main.4ae6dc87.js" defer="defer"></script>
+<script src="/Aftermath-API/assets/js/main.7b00aded.js" defer="defer"></script>
+</head>
+<body>
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/Aftermath-API/"><b class="navbar__title text--truncate">Aftermath</b></a><a class="navbar__item navbar__link" href="/Aftermath-API/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/Aftermath-API/api/">API</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/CompilerErrorRBX/Aftermath-Game" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input id="search_input_react" type="search" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/Aftermath-API/api/HolderService"><span title="Inventory" class="categoryLinkLabel_W154">Inventory</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/Aftermath-API/api/HolderService"><span title="​Holder​Service" class="linkLabel_WmDU">​Holder​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/InventoryService"><span title="​Inventory​Service" class="linkLabel_WmDU">​Inventory​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/InventoryManager"><span title="​Inventory​Manager" class="linkLabel_WmDU">​Inventory​Manager</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/EquipmentService"><span title="​Equipment​Service" class="linkLabel_WmDU">​Equipment​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/SlotPriority"><span title="​Slot​Priority" class="linkLabel_WmDU">​Slot​Priority</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/Aftermath-API/api/TransactionService"><span title="​Transaction​Service" class="linkLabel_WmDU">​Transaction​Service</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/Aftermath-API/api/ItemService"><span title="Items" class="categoryLinkLabel_W154">Items</span></a></div></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/CharacterUtil"><span title="​Character​Util" class="linkLabel_WmDU">​Character​Util</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerBinding"><span title="​Container​Binding" class="linkLabel_WmDU">​Container​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ContainerService"><span title="​Container​Service" class="linkLabel_WmDU">​Container​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemBinding"><span title="​Ground​Item​Binding" class="linkLabel_WmDU">​Ground​Item​Binding</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundItemService"><span title="​Ground​Item​Service" class="linkLabel_WmDU">​Ground​Item​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/GroundSpawnerService"><span title="​Ground​Spawner​Service" class="linkLabel_WmDU">​Ground​Spawner​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnData"><span title="​Item​Spawn​Data" class="linkLabel_WmDU">​Item​Spawn​Data</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/ItemSpawnService"><span title="​Item​Spawn​Service" class="linkLabel_WmDU">​Item​Spawn​Service</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryReplicator"><span title="​Player​Inventory​Replicator" class="linkLabel_WmDU">​Player​Inventory​Replicator</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/Aftermath-API/api/PlayerInventoryTransport"><span title="​Player​Inventory​Transport" class="linkLabel_WmDU">​Player​Inventory​Transport</span></a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Holder</span><span style="display:inline-block">Service</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>Operations over ItemHolders.</p>
+<p>
+  Every mutating function here is CONSERVATIVE: the total quantity across all
+  holders involved is identical before and after. Nothing is destroyed as a
+  consequence of arithmetic. A holder that reaches zero becomes empty and
+  stays a holder -- removing a ground pile from the world is a separate,
+  explicit decision, not a side effect of the last item being taken.
+</p>
+<p>
+  Contrast the current path, where BaseItem:SetQuantity clamps to the stack
+  limit, discards the difference, and calls self:Destroy() at zero.
+</p>
+</div></header><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions" translate="no">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="CreateGround"><code style="text-decoration:none">CreateGround</code><a href="#CreateGround" class="hash-link" aria-label="Direct link to CreateGround" title="Direct link to CreateGround" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L46"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">CreateGround</code><code>(</code><code>stack<!-- -->: </code><code class="blue_P4bS">ItemStack?</code><code>) → </code><code class="blue_P4bS">ItemHolder</code></div><div>
+<p>A world pile.</p>
+<p>
+  Gets a bare CUID: a ground pile has no owner, so there is nothing to derive
+  an id from. Unlimited by default -- the ground has no stack limit.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="CreateSlot"><code style="text-decoration:none">CreateSlot</code><a href="#CreateSlot" class="hash-link" aria-label="Direct link to CreateSlot" title="Direct link to CreateSlot" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L69"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">CreateSlot</code><code>(</code><div class="inset_uKQm"><div><code>owner_id<!-- -->: </code><code class="blue_P4bS">string</code><code>,</code></div><div><code>slot_key<!-- -->: </code><code class="blue_P4bS">string</code><code class="op_lSLc"> | </code><code class="blue_P4bS">number</code><code>,</code></div><div><code>max_quantity<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>accepts<!-- -->: </code><code class="purple_ieR2">(</code><code class="green_DgR4">(</code><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code><code class="green_DgR4">)</code><code class="green_DgR4"> → </code><code class="blue_P4bS">boolean</code><code class="purple_ieR2">)</code><code class="blue_P4bS">?</code></div></div><code>) → </code><code class="blue_P4bS">ItemHolder</code></div><div>
+<p>A slot inside something.</p>
+<p>
+  The id is DERIVED: <code>{owner_id}_{slot_key}</code>. For an inventory the key is the
+  slot's allocation index; for equipment it is the equip type, which reads
+  straight off the wire (<code>aB3f_Primary</code>). Either way the id is reproducible
+  from facts both realms already have, so replicating a slot costs the key
+  rather than an opaque string.
+</p>
+<p>
+  <code>max_quantity</code> nil means unlimited -- that is the replacement for threading
+  <code>unlimited_stack</code> through every call.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="CreateStack"><code style="text-decoration:none">CreateStack</code><a href="#CreateStack" class="hash-link" aria-label="Direct link to CreateStack" title="Direct link to CreateStack" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L88"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">CreateStack</code><code>(</code><div class="inset_uKQm"><div><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number</code><code>,</code></div><div><code>durability<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>state<!-- -->: </code><code class="blue_P4bS">Types.ItemState?</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="IsEmpty"><code style="text-decoration:none">IsEmpty</code><a href="#IsEmpty" class="hash-link" aria-label="Direct link to IsEmpty" title="Direct link to IsEmpty" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L107"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">IsEmpty</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="AreMergeable"><code style="text-decoration:none">AreMergeable</code><a href="#AreMergeable" class="hash-link" aria-label="Direct link to AreMergeable" title="Direct link to AreMergeable" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L176"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">AreMergeable</code><code>(</code><div class="inset_uKQm"><div><code>a<!-- -->: </code><code class="blue_P4bS">ItemStack</code><code>,</code></div><div><code>b<!-- -->: </code><code class="blue_P4bS">ItemStack</code></div></div><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+<p>
+  Two stacks merge only if every per-stack property matches. Durability and
+  skin differ per stack, so a damaged rifle must not silently absorb a pristine
+  one -- today MoveQuantity only compares ClassName.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="LimitFor"><code style="text-decoration:none">LimitFor</code><a href="#LimitFor" class="hash-link" aria-label="Direct link to LimitFor" title="Direct link to LimitFor" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L196"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">LimitFor</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code></div></div><code>) → </code><code class="blue_P4bS">number?</code></div><div>
+<p>The stack limit that actually applies to <code>config</code> in this holder.</p>
+<p>
+  nil means unbounded. Holder override first, then the item's own MaxQuantity --
+  so an item definition still sets the default stack size and a container can
+  raise or lower it. Shared with TransactionService, which needs the identical
+  rule against the projected state.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Space"><code style="text-decoration:none">Space</code><a href="#Space" class="hash-link" aria-label="Direct link to Space" title="Direct link to Space" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L203"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">Space</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Weight"><code style="text-decoration:none">Weight</code><a href="#Weight" class="hash-link" aria-label="Direct link to Weight" title="Direct link to Weight" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L210"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">Weight</code><code>(</code><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GroupWeight"><code style="text-decoration:none">GroupWeight</code><a href="#GroupWeight" class="hash-link" aria-label="Direct link to GroupWeight" title="Direct link to GroupWeight" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L221"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">GroupWeight</code><code>(</code><code>group<!-- -->: </code><code class="blue_P4bS">HolderGroup</code><code>) → </code><code class="blue_P4bS">number</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="GroupSpace"><code style="text-decoration:none">GroupSpace</code><a href="#GroupSpace" class="hash-link" aria-label="Direct link to GroupSpace" title="Direct link to GroupSpace" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L234"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">GroupSpace</code><code>(</code><div class="inset_uKQm"><div><code>group<!-- -->: </code><code class="blue_P4bS">HolderGroup</code><code>,</code></div><div><code>config<!-- -->: </code><code class="blue_P4bS">ItemConfig</code></div></div><code>) → </code><code class="blue_P4bS">number</code></div><div>
+<p>How many more units of <code>config</code> the group can carry by weight.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Transfer"><code style="text-decoration:none">Transfer</code><a href="#Transfer" class="hash-link" aria-label="Direct link to Transfer" title="Direct link to Transfer" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L261"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">Transfer</code><code>(</code><div class="inset_uKQm"><div><code>from<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>to<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code><code>,</code></div><div><code>group<!-- -->: </code><code class="blue_P4bS">HolderGroup?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Move up to <code>quantity</code> from one holder to another.</p>
+<p>
+  Returns what moved and what did not. THE REMAINDER STAYS IN <code>from</code> -- that
+  is the whole point. Picking up a 5,000 pile into 200 units of space leaves
+  4,800 on the ground rather than deleting them.
+</p>
+<p><code>group</code> is the destination's weight context, if it has one.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="TransferToGroup"><code style="text-decoration:none">TransferToGroup</code><a href="#TransferToGroup" class="hash-link" aria-label="Direct link to TransferToGroup" title="Direct link to TransferToGroup" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L343"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">TransferToGroup</code><code>(</code><div class="inset_uKQm"><div><code>from<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>group<!-- -->: </code><code class="blue_P4bS">HolderGroup</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number?</code></div></div><code>) → </code><code class="blue_P4bS">TransferResult</code></div><div>
+<p>Move a stack into the first holders that will take it, in order.</p>
+<p>
+  This is the pickup path: try each slot, keep whatever will not fit in the
+  source. Returns the total moved.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="Split"><code style="text-decoration:none">Split</code><a href="#Split" class="hash-link" aria-label="Direct link to Split" title="Direct link to Split" translate="no">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/CompilerErrorRBX/Aftermath-Game/blob/master/src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau#L394"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>HolderService<!-- -->:</code><code class="green_DgR4">Split</code><code>(</code><div class="inset_uKQm"><div><code>holder<!-- -->: </code><code class="blue_P4bS">ItemHolder</code><code>,</code></div><div><code>quantity<!-- -->: </code><code class="blue_P4bS">number</code></div></div><code>) → </code><code class="blue_P4bS">ItemStack?</code></div><div>
+<p>Take <code>quantity</code> out as a free-standing stack.</p>
+<p>
+  Used for drag-and-drop and for dropping to the world: the caller owns the
+  returned stack and must place it somewhere. Returns nil if nothing moved,
+  never a zero-quantity stack.
+</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;CreateGround&quot;,
+            &quot;desc&quot;: &quot;A world pile.\n\nGets a bare CUID: a ground pile has no owner, so there is nothing to derive\nan id from. Unlimited by default -- the ground has no stack limit.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;stack&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 46,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CreateSlot&quot;,
+            &quot;desc&quot;: &quot;A slot inside something.\n\nThe id is DERIVED: `{owner_id}_{slot_key}`. For an inventory the key is the\nslot&#x27;s allocation index; for equipment it is the equip type, which reads\nstraight off the wire (`aB3f_Primary`). Either way the id is reproducible\nfrom facts both realms already have, so replicating a slot costs the key\nrather than an opaque string.\n\n`max_quantity` nil means unlimited -- that is the replacement for threading\n`unlimited_stack` through every call.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;owner_id&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;slot_key&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string | number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;max_quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;accepts&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;((config: ItemConfig) -&gt; boolean)?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 69,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;CreateStack&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemConfig&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;durability&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;state&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Types.ItemState?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 88,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;IsEmpty&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 107,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;AreMergeable&quot;,
+            &quot;desc&quot;: &quot;Two stacks merge only if every per-stack property matches. Durability and\nskin differ per stack, so a damaged rifle must not silently absorb a pristine\none -- today MoveQuantity only compares ClassName.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;a&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;b&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 176,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;LimitFor&quot;,
+            &quot;desc&quot;: &quot;The stack limit that actually applies to `config` in this holder.\n\nnil means unbounded. Holder override first, then the item&#x27;s own MaxQuantity --\nso an item definition still sets the default stack size and a container can\nraise or lower it. Shared with TransactionService, which needs the identical\nrule against the projected state.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemConfig&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 196,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Space&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemConfig&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 203,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Weight&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 210,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GroupWeight&quot;,
+            &quot;desc&quot;: &quot;&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;group&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;HolderGroup&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 221,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GroupSpace&quot;,
+            &quot;desc&quot;: &quot;How many more units of `config` the group can carry by weight.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;group&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;HolderGroup&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;config&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemConfig&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 234,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Transfer&quot;,
+            &quot;desc&quot;: &quot;Move up to `quantity` from one holder to another.\n\nReturns what moved and what did not. THE REMAINDER STAYS IN `from` -- that\nis the whole point. Picking up a 5,000 pile into 200 units of space leaves\n4,800 on the ground rather than deleting them.\n\n`group` is the destination&#x27;s weight context, if it has one.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;to&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;group&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;HolderGroup?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 261,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;TransferToGroup&quot;,
+            &quot;desc&quot;: &quot;Move a stack into the first holders that will take it, in order.\n\nThis is the pickup path: try each slot, keep whatever will not fit in the\nsource. Returns the total moved.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;from&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;group&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;HolderGroup&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?\n&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;TransferResult\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 343,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Split&quot;,
+            &quot;desc&quot;: &quot;Take `quantity` out as a free-standing stack.\n\nUsed for drag-and-drop and for dropping to the world: the caller owns the\nreturned stack and must place it somewhere. Returns nil if nothing moved,\nnever a zero-quantity stack.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;holder&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemHolder&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;quantity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ItemStack?\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 394,
+                &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;HolderService&quot;,
+    &quot;desc&quot;: &quot;Operations over ItemHolders.\n\nEvery mutating function here is CONSERVATIVE: the total quantity across all\nholders involved is identical before and after. Nothing is destroyed as a\nconsequence of arithmetic. A holder that reaches zero becomes empty and\nstays a holder -- removing a ground pile from the world is a separate,\nexplicit decision, not a side effect of the last item being taken.\n\nContrast the current path, where BaseItem:SetQuantity clamps to the stack\nlimit, discards the difference, and calls self:Destroy() at zero.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 17,
+        &quot;path&quot;: &quot;src2/shared/EmberSharedLibrary/GameShared/Inventory2/HolderService.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#AreMergeable" class="table-of-contents__link toc-highlight">:AreMergeable</a></li><li><a href="#CreateGround" class="table-of-contents__link toc-highlight">:CreateGround</a></li><li><a href="#CreateSlot" class="table-of-contents__link toc-highlight">:CreateSlot</a></li><li><a href="#CreateStack" class="table-of-contents__link toc-highlight">:CreateStack</a></li><li><a href="#GroupSpace" class="table-of-contents__link toc-highlight">:GroupSpace</a></li><li><a href="#GroupWeight" class="table-of-contents__link toc-highlight">:GroupWeight</a></li><li><a href="#IsEmpty" class="table-of-contents__link toc-highlight">:IsEmpty</a></li><li><a href="#LimitFor" class="table-of-contents__link toc-highlight">:LimitFor</a></li><li><a href="#Space" class="table-of-contents__link toc-highlight">:Space</a></li><li><a href="#Split" class="table-of-contents__link toc-highlight">:Split</a></li><li><a href="#Transfer" class="table-of-contents__link toc-highlight">:Transfer</a></li><li><a href="#TransferToGroup" class="table-of-contents__link toc-highlight">:TransferToGroup</a></li><li><a href="#Weight" class="table-of-contents__link toc-highlight">:Weight</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 CompilerErrorRBX. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+</body>
+</html>
